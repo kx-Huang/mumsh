@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "main.h": "c",
+        "signal.h": "c",
+        "__locale": "c",
+        "sstream": "c",
+        "system_error": "c",
+        "atomic": "c",
+        "bitset": "c",
+        "__string": "c",
+        "string": "c",
+        "string_view": "c"
+    }
+}
