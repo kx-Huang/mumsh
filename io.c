@@ -1,5 +1,11 @@
 #include "io.h"
 
+int ctrl_c;
+char cmd_buffer[BUFFER_SIZE];
+
+// ctrl-c interruption handler
+void sigint_handler() { ctrl_c = SIGINT; }
+
 // prompt "mumsh"
 void prompt_mumsh(void) {
   printf("mumsh $ ");
@@ -7,9 +13,24 @@ void prompt_mumsh(void) {
 }
 
 // read cmd into buffer
-void read_cmd(char* buffer) {
-  if (fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
-    if (feof(stdin)) exit_mumsh(NORMAL_EXIT, "");
+void read_cmd() {
+  int ch = 0, i = 0;
+  while ((ch = getchar())) {
+    if (ctrl_c == SIGINT) {
+      ctrl_c = 0;
+      printf("\n");
+      prompt_mumsh();
+    } else if (ch == EOF && i == 0)
+      exit_mumsh(NORMAL_EXIT, "");
+    if (ch == EOF) {
+      clearerr(stdin);
+      continue;
+    }
+    cmd_buffer[i++] = ch;
+    if (ch == '\n') {
+      cmd_buffer[i] = '\0';
+      return;
+    }
   }
 }
 
@@ -37,7 +58,7 @@ void exit_mumsh(int exit_code, char* content) {
     case DUP_OUTPUT_REDIRECTION:
       fputs("error: duplicated output redirection\n", stderr);
       break;
-    case ERR_SYNTAX:
+    case ERROR_SYNTAX:
       fputs("syntax error near unexpected token `", stderr);
       fputs(content, stderr);
       fputs("'\n", stderr);
@@ -48,6 +69,9 @@ void exit_mumsh(int exit_code, char* content) {
     case NON_EXISTING_DIR:
       fputs(content, stderr);
       fputs(": No such file or directory\n", stderr);
+      break;
+    case UNEXPECTED_ERROR:
+      fputs("error: unexpected error\n", stderr);
       break;
     default:
       break;

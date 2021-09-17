@@ -15,13 +15,14 @@ enum exit_status {
   NO_PERMISSION = 3,
   DUP_INPUT_REDIRECTION = 4,
   DUP_OUTPUT_REDIRECTION = 5,
-  ERR_SYNTAX = 6,
+  ERROR_SYNTAX = 6,
   MISS_PROGRAM = 7,
-  NON_EXISTING_DIR = 8
+  NON_EXISTING_DIR = 8,
+  UNEXPECTED_ERROR = 9
 };
 
 void prompt_mumsh(void);
-void read_cmd(char* buffer);
+void read_cmd(void);
 void exit_mumsh(int error_code, char* content);
 
 #endif  // IO_H
