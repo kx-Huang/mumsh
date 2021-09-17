@@ -10,14 +10,15 @@ int main() {
   while (1) {
     prompt_mumsh();
     read_cmd();
-    if (strncmp(cmd_buffer, "exit", 4) == 0) exit_mumsh(NORMAL_EXIT, "");
 
     // create child process
     pid_t pid = fork();
     if (pid < 0)
       exit_mumsh(UNEXPECTED_ERROR, "");
-    else if (pid == 0)  // run child process
+    else if (pid == 0) {  // run child process
       parser();
+      exec_cmd();
+    }
 
     // todo: handle background jobs here
 

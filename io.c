@@ -20,12 +20,8 @@ void read_cmd() {
       ctrl_c = 0;
       printf("\n");
       prompt_mumsh();
-    } else if (ch == EOF && i == 0)
+    } else if (ch == EOF)
       exit_mumsh(NORMAL_EXIT, "");
-    if (ch == EOF) {
-      clearerr(stdin);
-      continue;
-    }
     cmd_buffer[i++] = ch;
     if (ch == '\n') {
       cmd_buffer[i] = '\0';
