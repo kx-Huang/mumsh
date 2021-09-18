@@ -14,6 +14,7 @@ void prompt_mumsh(void) {
 
 // read cmd into buffer
 void read_cmd() {
+  prompt_mumsh();
   int ch = 0, i = 0;
   while ((ch = getchar())) {
     if (ctrl_c == SIGINT) {
@@ -25,7 +26,7 @@ void read_cmd() {
     cmd_buffer[i++] = ch;
     if (ch == '\n') {
       cmd_buffer[i] = '\0';
-      return;
+      break;
     }
   }
 }

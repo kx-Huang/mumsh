@@ -2,6 +2,7 @@
 #define IO_H
 
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
