@@ -1,5 +1,6 @@
 # enviornment
 .vscode/
+.DS_Store
 # build
 mumsh
 mumsh_memory_check
