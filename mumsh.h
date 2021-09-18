@@ -7,8 +7,6 @@
 #include "io.h"
 #include "parser.h"
 
-#define SIGINT 2
-
 void sigint_handler();
 
 #endif  // MEMSH_H
