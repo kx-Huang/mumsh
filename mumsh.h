@@ -1,12 +1,11 @@
 #ifndef MEMSH_H
 #define MEMSH_H
 
+#include <errno.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 #include "io.h"
 #include "parser.h"
-
-void sigint_handler();
+#include "process.h"
 
 #endif  // MEMSH_H

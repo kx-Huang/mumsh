@@ -1,46 +1,57 @@
 #include "mumsh.h"
 
 int main() {
-  // handle ctrl-c interruption
-  struct sigaction sa;
-  sa.sa_handler = sigint_handler;
-  sigaction(SIGINT, &sa, NULL);
+  // subscribe ctrl-c notification
+  struct sigaction action;
+  action.sa_flags = 0;
+  sigemptyset(&action.sa_mask);
+  action.sa_handler = sigint_handler;
+  sigaction(SIGINT, &action, NULL);
 
   // main loop
   while (1) {
     // prompt and read input
     read_cmd();
-    token_t token = parser();
 
-    // for (size_t i = 0; token.argv[i] != NULL; i++)
-    //   printf("argv[%lu]: \"%s\"\n", i, token.argv[i]);
-    // printf("src: \"%s\"\n", token.src);
-    // printf("dest: \"%s\"\n", token.dest);
-    // printf("read? %d\n", token.read_file);
-    // printf("write? %d\n", token.write_file);
-    // printf("append? %d\n", token.append_file);
+    // ctrl-c interrupt terminal input
+    if (ctrl_c == SIGINT) {
+      ctrl_c = 0;
+      printf("\n");
+      fflush(stdout);
+      continue;
+    }
+
+    // parse input command
+    token_t token = parser();
+    //debug(&token);
 
     // cmd "exit"
     if (token.argc != 0 && strncmp(token.argv[0], "exit", 4) == 0)
-      exit_mumsh(NORMAL_EXIT, "");
+      exit_process(NORMAL_EXIT, "");
 
     // create child process
     pid_t pid = fork();
-    if (pid < 0)  // error creating process
-      exit_mumsh(UNEXPECTED_ERROR, "");
-    else if (pid == 0) {  // run child process
-      sigaction(SIGINT, &sa, NULL);
+    if (pid < 0)
+      exit_process(UNEXPECTED_ERROR, "");
+    else if (pid == 0) {
+      // create new process group for child process
+      if (setpgid(pid, 0) != 0) exit_process(UNEXPECTED_ERROR, "");
       exec_cmd(&token);
     }
 
     // todo: handle background jobs here
 
     // wait for child process done
-    pid_t res = waitpid(pid, NULL, 0);
-    if (res != pid) exit_mumsh(UNEXPECTED_ERROR, "");
+    waitpid(pid, NULL, WUNTRACED);
+
+    // ctrl-c interrupt child process
+    if (ctrl_c == SIGINT) {
+      printf("\n");
+      fflush(stdout);
+      ctrl_c = 0;
+    }
 
     // free after malloc token
     for (size_t i = 0; i < token.argc; i++) free(token.argv[i]);
   }
-  exit(0);
 }

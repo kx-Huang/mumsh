@@ -1,5 +1,15 @@
 #include "parser.h"
 
+void debug(token_t* token) {
+  for (size_t i = 0; token->argv[i] != NULL; i++)
+    printf("argv[%lu]: \"%s\"\n", i, token->argv[i]);
+  printf("src: \"%s\"\n", token->src);
+  printf("dest: \"%s\"\n", token->dest);
+  printf("read? %d\n", token->read_file);
+  printf("write? %d\n", token->write_file);
+  printf("append? %d\n", token->append_file);
+}
+
 token_t parser() {
   token_t token = {0, 0, 0, {0}, {0}, {0}, 0};
   parser_t parser = {0, 0, 0, 0, {0}};
@@ -18,9 +28,20 @@ token_t parser() {
         parser.buffer[j] = '\0';
         if (j != 0) {
           if (parser.is_src) {
+            // error: Duplicated input redirection
+            if (strlen(token.src) != 0) {
+              // to fix: no exit
+              syntax_error(DUP_INPUT_REDIRECTION, "");
+              memset(token.src, 0, BUFFER_SIZE);
+            }
             memcpy(token.src, parser.buffer, j + 1);
             parser.is_src = 0;
           } else if (parser.is_dest) {
+            // error: Duplicated output redirection
+            if (strlen(token.dest) != 0) {
+              syntax_error(DUP_OUTPUT_REDIRECTION, "");
+              memset(token.dest, 0, BUFFER_SIZE);
+            }
             memcpy(token.dest, parser.buffer, j + 1);
             parser.is_dest = 0;
           } else {
@@ -69,7 +90,7 @@ token_t parser() {
       // dangling quotation
       if (cmd_buffer[i] == '\n') {
         // todo: prompt for input
-        exit_mumsh(UNEXPECTED_ERROR, "");
+        syntax_error(UNEXPECTED_ERROR, "");
       }
       // single quotation ends
       if (parser.in_single_quote && cmd_buffer[i] == '\'') {
@@ -89,27 +110,27 @@ token_t parser() {
   return token;
 }
 
-void exec_cmd(token_t* token) {
-  // handle redirection
-  if (token->read_file) {
-    int file = open(token->src, O_RDONLY);
-    if (file < 0) exit_mumsh(NON_EXISTING_FILE, token->src);
-    dup2(file, STDIN_FILENO);
+// exit with exit code
+void syntax_error(int error_type, char* content) {
+  switch (error_type) {
+    case DUP_INPUT_REDIRECTION:
+      fputs("error: duplicated input redirection\n", stderr);
+      break;
+    case DUP_OUTPUT_REDIRECTION:
+      fputs("error: duplicated output redirection\n", stderr);
+      break;
+    case ERROR_SYNTAX:
+      fputs("syntax error near unexpected token `", stderr);
+      fputs(content, stderr);
+      fputs("'\n", stderr);
+      break;
+    case MISS_PROGRAM:
+      fputs("error: missing program\n", stderr);
+      break;
+    case UNEXPECTED_ERROR:
+      fputs("error: unexpected error\n", stderr);
+      break;
+    default:
+      break;
   }
-  if (token->append_file) {
-    int file = open(token->dest, O_WRONLY | O_CREAT | O_APPEND, 0600);
-    if (file < 0) exit_mumsh(NO_PERMISSION, token->dest);
-    dup2(file, STDOUT_FILENO);
-  } else if (token->write_file) {
-    int file = open(token->dest, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    if (file < 0) exit_mumsh(NO_PERMISSION, token->dest);
-    dup2(file, STDOUT_FILENO);
-  }
-
-  // execute command
-  int error = 0;
-  char* cmd = token->argv[0];
-  if (token->argc != 0) error = execvp(cmd, token->argv);
-  if (error < 0) exit_mumsh(NON_EXISTING_PROGRAM, cmd);
-  exit(0);
 }
