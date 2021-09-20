@@ -5,6 +5,7 @@ MUMSH = mumsh
 MUMSHMC = mumsh_memory_check
 MUMSHMC_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=integer
 JOJ_URL = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6141871a623b5b000610bca9/6141859a623b5b000610bc9d
+JOJ_MC_URL = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6141871a623b5b000610bca9/61418609623b5b000610bca3
 TAR_NAME = p1_m1.tar
 .PHONY: clean
 
@@ -16,6 +17,9 @@ tar:
 
 joj: $(MUMSH) $(MUMSHMC) tar
 	joj-submit $(JOJ_URL) $(TAR_NAME) make
+
+mc: $(MUMSH) $(MUMSHMC) tar
+	joj-submit $(JOJ_MC_URL) $(TAR_NAME) make
 
 $(MUMSH): $(MUMSH_SRC)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)
