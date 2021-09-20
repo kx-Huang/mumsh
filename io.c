@@ -6,20 +6,6 @@ char cmd_buffer[BUFFER_SIZE];
 // ctrl-c interruption handler
 void sigint_handler() { ctrl_c = SIGINT; }
 
-// // handle parent ctrl-c interruption
-// void sigint_handler_parent(int signal) {
-//   if (signal != SIGINT) return;
-//   printf("\n");
-//   prompt_mumsh();
-// }
-
-// // handle child ctrl-c interruption
-// void sigint_handler_child(int signal) {
-//   if (signal != SIGINT) return;
-//   printf("\n");
-//   fflush(stdout);
-// }
-
 // prompt "mumsh"
 void prompt_mumsh() {
   printf("mumsh $ ");

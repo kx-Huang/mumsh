@@ -3,8 +3,6 @@
 
 #define BUFFER_SIZE 1024
 
-#include <stdio.h>
-
 enum error_type {
   NORMAL_EXIT = 0,
   NON_EXISTING_PROGRAM = 1,

@@ -1,12 +1,18 @@
 #include "mumsh.h"
 
 int main() {
-  // subscribe ctrl-c notification
-  struct sigaction action;
-  action.sa_flags = 0;
-  sigemptyset(&action.sa_mask);
-  action.sa_handler = sigint_handler;
-  sigaction(SIGINT, &action, NULL);
+  // subscribe ctrl-c and tty-io signal notification
+  struct sigaction sa_SIGTT;
+  struct sigaction sa_SIGINT;
+  sa_SIGTT.sa_flags = 0;
+  sa_SIGINT.sa_flags = 0;
+  sigemptyset(&sa_SIGTT.sa_mask);
+  sigemptyset(&sa_SIGINT.sa_mask);
+  sa_SIGTT.sa_handler = SIG_IGN;
+  sa_SIGINT.sa_handler = sigint_handler;
+  sigaction(SIGINT, &sa_SIGINT, NULL);
+  sigaction(SIGTTOU, &sa_SIGTT, NULL);
+  sigaction(SIGTTIN, &sa_SIGTT, NULL);
 
   // main loop
   while (1) {
@@ -23,7 +29,7 @@ int main() {
 
     // parse input command
     token_t token = parser();
-    //debug(&token);
+    // debug(&token);
 
     // cmd "exit"
     if (token.argc != 0 && strncmp(token.argv[0], "exit", 4) == 0)
@@ -34,22 +40,21 @@ int main() {
     if (pid < 0)
       exit_process(UNEXPECTED_ERROR, "");
     else if (pid == 0) {
-      // create new process group for child process
-      if (setpgid(pid, 0) != 0) exit_process(UNEXPECTED_ERROR, "");
+      sigaction(SIGINT, &sa_SIGINT, NULL);
       exec_cmd(&token);
     }
+
+    // set child as terminal foreground process group leader
+    setpgid(pid, 0);
+    tcsetpgrp(STDOUT_FILENO, pid);
 
     // todo: handle background jobs here
 
     // wait for child process done
     waitpid(pid, NULL, WUNTRACED);
 
-    // ctrl-c interrupt child process
-    if (ctrl_c == SIGINT) {
-      printf("\n");
-      fflush(stdout);
-      ctrl_c = 0;
-    }
+    // reset parent as terminal foreground process group leader
+    tcsetpgrp(STDOUT_FILENO, getpgrp());
 
     // free after malloc token
     for (size_t i = 0; i < token.argc; i++) free(token.argv[i]);

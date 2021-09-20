@@ -1,6 +1,8 @@
 #ifndef IO_H
 #define IO_H
 
+#include <stdio.h>
+
 #include "process.h"
 
 void sigint_handler();
