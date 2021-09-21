@@ -8,7 +8,7 @@
 void sigint_handler();
 void sigint_handler_parent(int signal);
 void sigint_handler_child(int signal);
-void prompt_mumsh();
-void read_cmd();
+void mumsh_prompt();
+void mumsh_read_cmds();
 
 #endif  // IO_H

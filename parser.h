@@ -7,9 +7,9 @@
 
 #include "data.h"
 
-token_t parser();
-void syntax_error(int error_type, char* content);
+int mumsh_parser();
+int syntax_error(int error_type, char* content);
 
-void debug(token_t* token);
+void debug();
 
 #endif  // PARSER_H

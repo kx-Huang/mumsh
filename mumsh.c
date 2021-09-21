@@ -17,7 +17,7 @@ int main() {
   // main loop
   while (1) {
     // prompt and read input
-    read_cmd();
+    mumsh_read_cmds();
 
     // ctrl-c interrupt terminal input
     if (ctrl_c == SIGINT) {
@@ -28,21 +28,19 @@ int main() {
     }
 
     // parse input command
-    token_t token = parser();
-    // debug(&token);
+    if (mumsh_parser() != 0) continue;
+    //debug();
 
     // cmd "exit"
-    if (token.argc != 0 && strncmp(token.argv[0], "exit", 4) == 0)
+    if (cmd.cnt != 0 && strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
       exit_process(NORMAL_EXIT, "");
 
     // create child process
     pid_t pid = fork();
     if (pid < 0)
       exit_process(UNEXPECTED_ERROR, "");
-    else if (pid == 0) {
-      sigaction(SIGINT, &sa_SIGINT, NULL);
-      exec_cmd(&token);
-    }
+    else if (pid == 0)
+      mumsh_exec_cmds();
 
     // set child as terminal foreground process group leader
     setpgid(pid, 0);
@@ -57,6 +55,9 @@ int main() {
     tcsetpgrp(STDOUT_FILENO, getpgrp());
 
     // free after malloc token
-    for (size_t i = 0; i < token.argc; i++) free(token.argv[i]);
+    for (size_t i = 0; i < cmd.cnt; i++)
+      for (size_t j = 0; j < cmd.cmds[i].argc; j++)
+        free(cmd.cmds[i].argv[j]);
+    free(cmd.cmds);
   }
 }

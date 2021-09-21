@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -pedantic -Wno-unused-result
+CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -Wconversion -pedantic -Wno-unused-result
 MUMSH_SRC = *.c
 MUMSH = mumsh
 MUMSHMC = mumsh_memory_check
@@ -20,6 +20,9 @@ joj: $(MUMSH) $(MUMSHMC) tar
 
 mc: $(MUMSH) $(MUMSHMC) tar
 	joj-submit $(JOJ_MC_URL) $(TAR_NAME) make
+
+check: $(MUMSH) $(MUMSHMC)
+	cpplint --linelength=120 --filter=-legal,-readability/casting,-whitespace,-runtime/printf,-runtime/threadsafe_fn,-readability/todo,-build/include_subdir,-build/header_guard *.c *.h
 
 $(MUMSH): $(MUMSH_SRC)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)

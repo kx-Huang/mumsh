@@ -17,18 +17,25 @@ enum error_type {
 };
 
 typedef struct token {
+  size_t argc;
+  char* argv[BUFFER_SIZE];
+} token_t;
+
+typedef struct cmd {
+  size_t cnt;
   int read_file;
   int write_file;
   int append_file;
   char src[BUFFER_SIZE];
   char dest[BUFFER_SIZE];
-  char* argv[BUFFER_SIZE];
-  size_t argc;
-} token_t;
+  token_t* cmds;
+} cmd_t;
 
 typedef struct parser {
+  size_t buffer_len;
   int is_src;
   int is_dest;
+  int is_pipe;
   int in_single_quote;
   int in_double_quote;
   char buffer[BUFFER_SIZE];
@@ -36,5 +43,6 @@ typedef struct parser {
 
 extern int ctrl_c;
 extern char cmd_buffer[BUFFER_SIZE];
+extern cmd_t cmd;
 
 #endif  // DATA_H

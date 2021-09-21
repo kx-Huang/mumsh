@@ -1,30 +1,38 @@
 #include "process.h"
 
-void exec_cmd(token_t* token) {
+void mumsh_exec_cmds() {
+  // todo: piping
+  io_redirect();
+  for (size_t i = 0; i < cmd.cnt; i++) exec_cmd(&cmd.cmds[i]);
+}
+
+void io_redirect() {
   // handle redirection
-  if (token->read_file) {
-    int file = open(token->src, O_RDONLY);
+  if (cmd.read_file) {
+    int file = open(cmd.src, O_RDONLY);
     // error: Non-existing file in input redirection
-    if (file < 0) exit_process(NON_EXISTING_FILE, token->src);
+    if (file < 0) exit_process(NON_EXISTING_FILE, cmd.src);
     dup2(file, STDIN_FILENO);
   }
-  if (token->append_file) {
-    int file = open(token->dest, O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
+  if (cmd.append_file) {
+    int file = open(cmd.dest, O_WRONLY | O_CREAT | O_APPEND, S_IRWXU);
     // error: Failed to open file in output redirection
-    if (file < 0) exit_process(NO_PERMISSION, token->dest);
+    if (file < 0) exit_process(NO_PERMISSION, cmd.dest);
     dup2(file, STDOUT_FILENO);
-  } else if (token->write_file) {
-    int file = open(token->dest, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
+  } else if (cmd.write_file) {
+    int file = open(cmd.dest, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU);
     // error: Failed to open file in output redirection
-    if (file < 0) exit_process(NO_PERMISSION, token->dest);
+    if (file < 0) exit_process(NO_PERMISSION, cmd.dest);
     dup2(file, STDOUT_FILENO);
   }
+}
 
+void exec_cmd(token_t* token) {
   // execute command if not empty
   // error: Non-existing program
   if (token->argc == 0) exit(0);
-  char* cmd = token->argv[0];
-  if (execvp(cmd, token->argv) < 0) exit_process(NON_EXISTING_PROGRAM, cmd);
+  if (execvp(token->argv[0], token->argv) < 0)
+    exit_process(NON_EXISTING_PROGRAM, token->argv[0]);
 }
 
 // exit process with exit code

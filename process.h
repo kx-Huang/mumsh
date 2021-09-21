@@ -9,6 +9,8 @@
 
 #include "data.h"
 
+void mumsh_exec_cmds();
+void io_redirect();
 void exec_cmd(token_t* token);
 void exit_process(int exit_code, char* content);
 
