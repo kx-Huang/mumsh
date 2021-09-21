@@ -3,7 +3,7 @@
 cmd_t cmd = {0, 0, 0, 0, {0}, {0}, NULL};
 
 void debug() {
-  // printf("cmd cnt: %lu\n", cmd.cnt);
+  //printf("cmd cnt: %lu\n", cmd.cnt);
   for (size_t i = 0; i < cmd.cnt; i++)
     for (size_t j = 0; j < cmd.cmds[i].argc; j++)
       printf("argv[%lu][%lu]: \"%s\"\n", i, j, cmd.cmds[i].argv[j]);
@@ -99,6 +99,7 @@ int mumsh_parser() {
           // todo: incomplete input check
 
           // done parsing cmd
+          if (token.argc == 0) return 0;
           cmd.cmds[cmd.cnt++] = token;
           return 0;
         }

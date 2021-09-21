@@ -31,8 +31,11 @@ int main() {
     if (mumsh_parser() != 0) continue;
     //debug();
 
+    // no command exist
+    if (cmd.cnt == 0) continue;
+
     // cmd "exit"
-    if (cmd.cnt != 0 && strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
+    if (strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
       exit_process(NORMAL_EXIT, "");
 
     // create child process
@@ -56,8 +59,7 @@ int main() {
 
     // free after malloc token
     for (size_t i = 0; i < cmd.cnt; i++)
-      for (size_t j = 0; j < cmd.cmds[i].argc; j++)
-        free(cmd.cmds[i].argv[j]);
+      for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
     free(cmd.cmds);
   }
 }
