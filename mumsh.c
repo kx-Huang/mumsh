@@ -29,13 +29,14 @@ int main() {
 
     // parse input command
     if (mumsh_parser() != 0) continue;
-    //debug();
+    // debug();
 
     // no command exist
     if (cmd.cnt == 0) continue;
 
     // cmd "exit"
-    if (strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
+    if (cmd.cnt == 1 && cmd.cmds[0].argc == 1 &&
+        strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
       exit_process(NORMAL_EXIT, "");
 
     // create child process
