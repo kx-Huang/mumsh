@@ -35,9 +35,10 @@ int main() {
     if (cmd.cnt == 0) continue;
 
     // cmd "exit"
-    if (cmd.cnt == 1 && cmd.cmds[0].argc == 1 &&
-        strncmp(cmd.cmds[0].argv[0], "exit", 4) == 0)
-      exit_process(NORMAL_EXIT, "");
+    if (mumsh_cmd_exit() == NORMAL_EXIT) exit_process(NORMAL_EXIT, "");
+
+    // built-in cmd "cd"
+    if (mumsh_cmd_cd() == NORMAL_EXIT) continue;
 
     // create child process
     pid_t pid = fork();

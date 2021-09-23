@@ -6,24 +6,30 @@ char cmd_buffer[BUFFER_SIZE];
 // ctrl-c interruption handler
 void sigint_handler() { ctrl_c = SIGINT; }
 
-// prompt "mumsh"
-void mumsh_prompt() {
-  printf("mumsh $ ");
-  fflush(stdout);
-}
-
 // read cmd into buffer
 void mumsh_read_cmds() {
-  mumsh_prompt();
+  printf("mumsh $ ");
+  fflush(stdout);
+  write_cmd_buffer(cmd_buffer);
+}
+
+void read_dangling_cmds(char *buffer) {
+  printf("> ");
+  fflush(stdout);
+  write_cmd_buffer(buffer);
+}
+
+// write cmd into buffer
+void write_cmd_buffer(char *buffer) {
   int ch = 0, i = 0;
   while ((ch = getchar())) {
     if (ctrl_c == SIGINT)
       break;
     else if (ch == EOF)
       exit_process(NORMAL_EXIT, "");
-    cmd_buffer[i++] = (char)ch;
+    buffer[i++] = (char)ch;
     if (ch == '\n') {
-      cmd_buffer[i] = '\0';
+      buffer[i] = '\0';
       break;
     }
   }

@@ -42,6 +42,7 @@ typedef struct parser {
 } parser_t;
 
 extern int ctrl_c;
+extern char OLDPWD[BUFFER_SIZE];
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
 
