@@ -26,7 +26,7 @@ void write_cmd_buffer(char *buffer) {
     if (ctrl_c == SIGINT)
       break;
     else if (ch == EOF)
-      exit_process(NORMAL_EXIT, "");
+      exit_process(NORMAL, "");
     buffer[i++] = (char)ch;
     if (ch == '\n') {
       buffer[i] = '\0';

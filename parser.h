@@ -8,6 +8,7 @@
 #include "io.h"
 
 int mumsh_parser();
+void free_memory();
 int syntax_error(int error_type, char* content);
 
 void debug();

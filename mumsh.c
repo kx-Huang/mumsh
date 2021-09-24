@@ -28,40 +28,31 @@ int main() {
     }
 
     // parse input command
-    if (mumsh_parser() != 0) continue;
+    if (mumsh_parser() != NORMAL) {  // free allocated memory
+      free_memory();
+      continue;
+    }
     // debug();
 
     // no command exist
     if (cmd.cnt == 0) continue;
 
     // cmd "exit"
-    if (mumsh_cmd_exit() == NORMAL_EXIT) exit_process(NORMAL_EXIT, "");
+    if (mumsh_cmd_exit() == NORMAL) {
+      free_memory();
+      exit_process(NORMAL, "");
+    }
 
     // built-in cmd "cd"
-    if (mumsh_cmd_cd() == NORMAL_EXIT) continue;
+    if (mumsh_cmd_cd() == NORMAL) {
+      free_memory();
+      continue;
+    }
 
-    // create child process
-    pid_t pid = fork();
-    if (pid < 0)
-      exit_process(UNEXPECTED_ERROR, "");
-    else if (pid == 0)
-      mumsh_exec_cmds();
+    // execute cmds which run in child process
+    mumsh_exec_cmds();
 
-    // set child as terminal foreground process group leader
-    setpgid(pid, 0);
-    tcsetpgrp(STDOUT_FILENO, pid);
-
-    // todo: handle background jobs here
-
-    // wait for child process done
-    waitpid(pid, NULL, WUNTRACED);
-
-    // reset parent as terminal foreground process group leader
-    tcsetpgrp(STDOUT_FILENO, getpgrp());
-
-    // free after malloc token
-    for (size_t i = 0; i < cmd.cnt; i++)
-      for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
-    free(cmd.cmds);
+    // free allocated memory
+    free_memory();
   }
 }

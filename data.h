@@ -4,7 +4,7 @@
 #define BUFFER_SIZE 1024
 
 enum error_type {
-  NORMAL_EXIT = 0,
+  NORMAL = 0,
   NON_EXISTING_PROGRAM = 1,
   NON_EXISTING_FILE = 2,
   NO_PERMISSION = 3,
@@ -18,7 +18,7 @@ enum error_type {
 
 typedef struct token {
   size_t argc;
-  char* argv[BUFFER_SIZE];
+  char* argv[BUFFER_SIZE / 2];
 } token_t;
 
 typedef struct cmd {
@@ -42,7 +42,6 @@ typedef struct parser {
 } parser_t;
 
 extern int ctrl_c;
-extern char OLDPWD[BUFFER_SIZE];
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
 

@@ -102,16 +102,18 @@ int mumsh_parser() {
           // error 5: Duplicated output redirection
           if (cmd.write_file) return syntax_error(DUP_OUTPUT_REDIRECTION, "");
           cmd.cmds[cmd.cnt++] = token;
+          cmd.cmds = realloc(cmd.cmds, (cmd.cnt + 1) * sizeof(token_t));
           token.argc = 0;
           memset(token.argv, 0, BUFFER_SIZE);
-          cmd.cmds = realloc(cmd.cmds, 2 * sizeof(token_t));
           parser.is_pipe = 1;
 
           // incomplete input check and terminate parsing process
         } else if (cmd_buffer[i] == '\n') {
           // error 7: Missing program (only redirection)
-          if (token.argc == 0 && (cmd.read_file || cmd.write_file)) {
-            return syntax_error(MISS_PROGRAM, "");
+          if (token.argc == 0) {
+            if (cmd.read_file || cmd.write_file)
+              return syntax_error(MISS_PROGRAM, "");
+            if (cmd.cnt == 0) return NORMAL;
           }
           if (parser.is_dest || parser.is_src ||
               (parser.is_pipe && token.argc == 0)) {
@@ -120,7 +122,7 @@ int mumsh_parser() {
           }
           // done parsing cmd
           cmd.cmds[cmd.cnt++] = token;
-          return NORMAL_EXIT;
+          return NORMAL;
         }
       } else if (cmd_buffer[i] == '\'') {
         parser.in_single_quote = 1;
@@ -149,7 +151,14 @@ int mumsh_parser() {
       parser.buffer[parser.buffer_len++] = cmd_buffer[i];
     }
   }
-  return NORMAL_EXIT;
+  return NORMAL;
+}
+
+// free after malloc for cmd and token
+void free_memory() {
+  for (size_t i = 0; i < cmd.cnt; i++)
+    for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
+  free(cmd.cmds);
 }
 
 // exit with exit code
