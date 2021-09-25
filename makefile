@@ -1,6 +1,9 @@
 CC = clang
 CFLAGS = -std=gnu11 -O2 -Wall -Wextra -Werror -Wconversion -pedantic -Wno-unused-result
-MUMSH_SRC = *.c
+MUMSH_SRC = io.c mumsh.c parser.c process.c
+MUMSH_H = data.h io.h mumsh.h parser.h process.h
+DRIVER_SRC = driver.c
+DRIVER = driver
 MUMSH = mumsh
 MUMSHMC = mumsh_memory_check
 MUMSHMC_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=integer
@@ -15,8 +18,11 @@ TAR_NAME = p1_m1.tar
 all: $(MUMSH) $(MUMSHMC)
 	@echo mumsh successfully constructed
 
-tar:
+tarall:
 	find . -name "*.c" -or -name "*.h" -or -name "makefile" | tar -cvzf $(TAR_NAME) -T -
+
+tar:
+	tar -cvzf $(TAR_NAME) $(MUMSH_SRC) $(MUMSH_H)
 
 joj: $(MUMSH) $(MUMSHMC) tar
 	joj-submit $(JOJ_M2) $(TAR_NAME) make
@@ -24,8 +30,14 @@ joj: $(MUMSH) $(MUMSHMC) tar
 mc: $(MUMSH) $(MUMSHMC) tar
 	joj-submit $(JOJ_M2_MC) $(TAR_NAME) make
 
+mc1: $(MUMSH) $(MUMSHMC) tar
+	joj-submit $(JOJ_M1_MC) $(TAR_NAME) make
+
 check: $(MUMSH) $(MUMSHMC)
 	cpplint --linelength=120 --filter=-legal,-readability/casting,-whitespace,-runtime/printf,-runtime/threadsafe_fn,-readability/todo,-build/include_subdir,-build/header_guard *.c *.h
+
+$(DRIVER): $(DRIVER_SRC)
+	$(CC) $(CFLAGS) -o $(DRIVER) $(DRIVER_SRC)
 
 $(MUMSH): $(MUMSH_SRC)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)
@@ -37,5 +49,5 @@ $(MUMSHMC) : $(MUMSH_SRC)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) *.o *.a *~ $(MUMSH) $(MUMSHMC)
+	$(RM) *.o *.a *~ $(MUMSH) $(MUMSHMC) $(DRIVER)
 	$(RM) *.tar

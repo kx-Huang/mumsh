@@ -1,16 +1,15 @@
 #include "process.h"
 
 // initialize OLDPWD for built-in cmd "cd -"
-char OLDPWD[BUFFER_SIZE] = {0};
-pid_t pids[MAX_PROCESS_SIZE] = {0};
-int pipe_fd[MAX_PROCESS_SIZE][2];
+char OLDPWD[BUFFER_SIZE];
+pid_t pids[PROCESS_SIZE];
+int pipe_fd[PROCESS_SIZE][2];
 
 // exit mumsh with cmd "exit"
 int mumsh_cmd_exit() {
   if (cmd.cnt == 1 && cmd.cmds[0].argc >= 1 &&
-      strcmp(cmd.cmds[0].argv[0], "exit") == 0) {
+      strcmp(cmd.cmds[0].argv[0], "exit") == 0)
     return NORMAL;
-  }
   return -1;
 }
 
@@ -129,7 +128,10 @@ void mumsh_exec_cmds() {
     setpgid(pids[i], pids[0]);
     if (i == 0) tcsetpgrp(STDIN_FILENO, pids[0]);
     // close last pipe
-    if (cmd.cnt > 1 && i != 0) close(pipe_fd[i - 1][WRITE]);
+    if (cmd.cnt > 1 && i != 0) {
+      close(pipe_fd[i - 1][WRITE]);
+      close(pipe_fd[i - 1][READ]);
+    }
   }
 
   // todo: handle background jobs here

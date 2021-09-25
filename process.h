@@ -11,7 +11,6 @@
 
 #include "data.h"
 
-#define MAX_PROCESS_SIZE 512
 #define READ 0
 #define WRITE 1
 
@@ -25,7 +24,7 @@ void exec_cmd(token_t* token);
 void exit_process(int exit_code, char* content);
 
 char OLDPWD[BUFFER_SIZE];
-pid_t pids[MAX_PROCESS_SIZE];
-int pipe_fd[MAX_PROCESS_SIZE][2];
+pid_t pids[PROCESS_SIZE];
+int pipe_fd[PROCESS_SIZE][2];
 
 #endif  // PROCESS_H

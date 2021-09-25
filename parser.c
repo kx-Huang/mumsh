@@ -1,12 +1,13 @@
 #include "parser.h"
 
-cmd_t cmd = {0, 0, 0, 0, {0}, {0}, NULL};
+cmd_t cmd;
 
 void debug() {
   // printf("cmd cnt: %lu\n", cmd.cnt);
   for (size_t i = 0; i < cmd.cnt; i++)
     for (size_t j = 0; j < cmd.cmds[i].argc; j++)
-      printf("argv[%lu][%lu]: \"%s\"\n", i, j, cmd.cmds[i].argv[j]);
+      printf("argv[%lu][%lu]: \"%s\" %p\n", i, j, cmd.cmds[i].argv[j],
+             (void*)cmd.cmds[i].argv[j]);
   printf("src: \"%s\"\n", cmd.src);
   printf("dest: \"%s\"\n", cmd.dest);
   printf("read? %d\n", cmd.read_file);
@@ -21,7 +22,7 @@ void init_cmd() {
   cmd.append_file = 0;
   memset(cmd.src, 0, BUFFER_SIZE);
   memset(cmd.dest, 0, BUFFER_SIZE);
-  cmd.cmds = NULL;
+  memset(cmd.cmds, 0, COMMAND_SIZE);
 }
 
 int mumsh_parser() {
@@ -29,9 +30,6 @@ int mumsh_parser() {
   init_cmd();
   parser_t parser = {0, 0, 0, 0, 0, 0, {0}};
   token_t token = {0, {NULL}};
-
-  // allocate memory for one token struct
-  cmd.cmds = malloc(sizeof(token_t));
 
   // finite state machine
   for (size_t i = 0; i < BUFFER_SIZE; i++) {
@@ -50,34 +48,30 @@ int mumsh_parser() {
               if (cmd_buffer[i] == '|') return syntax_error(ERROR_SYNTAX, "|");
             }
           }
-
           // have buffer
         } else {
-          parser.buffer[parser.buffer_len] = '\0';
           // save buffer as redirect source
           if (parser.is_src) {
-            memcpy(cmd.src, parser.buffer, parser.buffer_len + 1);
+            strcpy(cmd.src, parser.buffer);
             parser.is_src = 0;
             cmd.read_file = 1;
             // save buffer as redirect destination
           } else if (parser.is_dest) {
-            memcpy(cmd.dest, parser.buffer, parser.buffer_len + 1);
+            strcpy(cmd.dest, parser.buffer);
             parser.is_dest = 0;
             cmd.write_file = 1;
             // save buffer as argument
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
-            memcpy(token.argv[token.argc++], parser.buffer,
-                   parser.buffer_len + 1);
+            strcpy(token.argv[token.argc++], parser.buffer);
           }
           // clear buffer
           parser.buffer_len = 0;
+          memset(parser.buffer, 0, BUFFER_SIZE);
         }
-
         // change state of FSM
         // space/tab have no state to set
         if (cmd_buffer[i] == ' ' || cmd_buffer[i] == '\t') continue;
-
         // set buffer state for redirector
         if (cmd_buffer[i] == '<') {
           // error 4: Duplicated input redirection
@@ -94,7 +88,6 @@ int mumsh_parser() {
             cmd.append_file = 1;
             i++;  // skip the second > for >> as a hole
           }
-
           // save argvs to cmd list and set buffer state for pipe
         } else if (cmd_buffer[i] == '|') {
           // error 7: Missing program
@@ -102,11 +95,10 @@ int mumsh_parser() {
           // error 5: Duplicated output redirection
           if (cmd.write_file) return syntax_error(DUP_OUTPUT_REDIRECTION, "");
           cmd.cmds[cmd.cnt++] = token;
-          cmd.cmds = realloc(cmd.cmds, (cmd.cnt + 1) * sizeof(token_t));
+          // reset token
           token.argc = 0;
           memset(token.argv, 0, BUFFER_SIZE);
           parser.is_pipe = 1;
-
           // incomplete input check and terminate parsing process
         } else if (cmd_buffer[i] == '\n') {
           // error 7: Missing program (only redirection)
@@ -158,7 +150,6 @@ int mumsh_parser() {
 void free_memory() {
   for (size_t i = 0; i < cmd.cnt; i++)
     for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
-  free(cmd.cmds);
 }
 
 // exit with exit code

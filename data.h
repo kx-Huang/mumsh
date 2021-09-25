@@ -2,6 +2,9 @@
 #define DATA_H
 
 #define BUFFER_SIZE 1024
+#define TOKEN_SIZE 512
+#define COMMAND_SIZE 512
+#define PROCESS_SIZE 512
 
 enum error_type {
   NORMAL = 0,
@@ -18,7 +21,7 @@ enum error_type {
 
 typedef struct token {
   size_t argc;
-  char* argv[BUFFER_SIZE / 2];
+  char* argv[TOKEN_SIZE];
 } token_t;
 
 typedef struct cmd {
@@ -28,7 +31,7 @@ typedef struct cmd {
   int append_file;
   char src[BUFFER_SIZE];
   char dest[BUFFER_SIZE];
-  token_t* cmds;
+  token_t cmds[COMMAND_SIZE];
 } cmd_t;
 
 typedef struct parser {
