@@ -30,6 +30,7 @@ int mumsh_cmd_cd() {
       } else {  // cd to last path
         if (chdir(OLDPWD) == 0) {
           printf("%s\n", OLDPWD);
+          fflush(stdout);
           strcpy(OLDPWD, path);
         }
       }
@@ -155,6 +156,7 @@ void exit_process(int exit_code, char* content) {
   switch (exit_code) {
     case NORMAL:
       printf("exit\n");
+      fflush(stdout);
       break;
     case NON_EXISTING_PROGRAM:
       fputs(content, stderr);
