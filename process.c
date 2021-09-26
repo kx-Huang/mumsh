@@ -149,9 +149,10 @@ void mumsh_exec_cmds() {
   // todo: handle background jobs here
   // wait for child process done
   int status;
+  pid_t res;
   for (size_t i = 0; i < cmd.cnt; i++) {
-    waitpid(pids[i], &status, WUNTRACED);
-    // debug_child_exit_status(pids[i], status);
+    res = waitpid(-pids[0], &status, WUNTRACED);
+    //debug_child_exit_status(res, status);
   }
   // reset parent as terminal foreground process group leader
   tcsetpgrp(STDOUT_FILENO, getpgrp());
