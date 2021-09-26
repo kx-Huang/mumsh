@@ -26,6 +26,7 @@ typedef struct token {
 
 typedef struct cmd {
   size_t cnt;
+  int background;
   int read_file;
   int write_file;
   int append_file;

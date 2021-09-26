@@ -37,7 +37,7 @@ int main() {
       free_memory();
       continue;
     }
-    // debug();
+    //debug_parser();
     // no command exist
     if (cmd.cnt == 0) continue;
     // cmd "exit"

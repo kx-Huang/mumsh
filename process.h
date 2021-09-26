@@ -32,6 +32,6 @@ char OLDPWD[BUFFER_SIZE];
 pid_t pids[PROCESS_SIZE];
 int pipe_fd[PROCESS_SIZE][2];
 
-void debug_child_exit_status(pid_t pid, int status);
+void debug_process(pid_t pid, int status);
 
 #endif  // PROCESS_H

@@ -3,6 +3,7 @@
 // structs storing cmds
 cmd_t cmd;
 
+// print parsed cmds
 void debug_parser() {
   for (size_t i = 0; i < cmd.cnt; i++)
     for (size_t j = 0; j < cmd.cmds[i].argc; j++)
@@ -13,11 +14,13 @@ void debug_parser() {
   printf("read? %d\n", cmd.read_file);
   printf("write? %d\n", cmd.write_file);
   printf("append? %d\n", cmd.append_file);
+  printf("background? %d\n", cmd.background);
 }
 
 // clear cmd struct for coming loop
 void reset_cmd() {
   cmd.cnt = 0;
+  cmd.background = 0;
   cmd.read_file = 0;
   cmd.write_file = 0;
   cmd.append_file = 0;
@@ -36,16 +39,17 @@ int mumsh_parser() {
     // out of quotation region
     if (parser.in_single_quote == 0 && parser.in_double_quote == 0) {
       // space/tab/newline/redirector as separator
-      if (strchr(" \t\n<>|", cmd_buffer[i]) != NULL) {
+      if (strchr(" \t\n<>|&", cmd_buffer[i]) != NULL) {
         // no buffer
         if (parser.buffer_len == 0) {
           if (strchr(" \t", cmd_buffer[i]) != NULL) continue;
-          if (strchr("<>|", cmd_buffer[i]) != NULL) {
+          if (strchr("<>|&", cmd_buffer[i]) != NULL) {
             // error 6: Syntax Error
             if (parser.is_dest || parser.is_src) {
               if (cmd_buffer[i] == '<') return syntax_error(ERROR_SYNTAX, "<");
               if (cmd_buffer[i] == '>') return syntax_error(ERROR_SYNTAX, ">");
               if (cmd_buffer[i] == '|') return syntax_error(ERROR_SYNTAX, "|");
+              if (cmd_buffer[i] == '&') return syntax_error(ERROR_SYNTAX, "&");
             }
           }
           // have buffer
@@ -73,7 +77,7 @@ int mumsh_parser() {
         }
         // change state of FSM
         // space/tab have no state to set
-        if (cmd_buffer[i] == ' ' || cmd_buffer[i] == '\t') continue;
+        if (strchr(" \t", cmd_buffer[i]) != NULL) continue;
         // set buffer state for redirector
         if (cmd_buffer[i] == '<') {
           // error 4: Duplicated input redirection
@@ -102,8 +106,15 @@ int mumsh_parser() {
           memset(token.argv, 0, BUFFER_SIZE);
           parser.is_pipe = 1;
           // incomplete input check and terminate parsing process
+        } else if (cmd_buffer[i] == '&') {
+          // error 7: Missing program (have no argv)
+          if (token.argc == 0) return syntax_error(MISS_PROGRAM, "");
+          cmd.background = 1;
+          // done parsing cmd
+          cmd.cmds[cmd.cnt++] = token;
+          return NORMAL;
         } else if (cmd_buffer[i] == '\n') {
-          // error 7: Missing program (only redirection)
+          // error 7: Missing program (only have redirector)
           if (token.argc == 0) {
             if (cmd.read_file || cmd.write_file)
               return syntax_error(MISS_PROGRAM, "");

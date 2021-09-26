@@ -152,7 +152,7 @@ void mumsh_exec_cmds() {
   pid_t res;
   for (size_t i = 0; i < cmd.cnt; i++) {
     res = waitpid(-pids[0], &status, WUNTRACED);
-    //debug_child_exit_status(res, status);
+    //debug_process(res, status);
   }
   // reset parent as terminal foreground process group leader
   tcsetpgrp(STDOUT_FILENO, getpgrp());
@@ -163,7 +163,8 @@ void mumsh_exec_cmds() {
   }
 }
 
-void debug_child_exit_status(pid_t pid, int status) {
+// print child process exit status
+void debug_process(pid_t pid, int status) {
   if (WIFEXITED(status))
     printf("child %d exited normally with status %d\n", pid,
            WEXITSTATUS(status));
