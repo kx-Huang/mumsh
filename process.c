@@ -5,6 +5,12 @@ char OLDPWD[BUFFER_SIZE];
 pid_t pids[PROCESS_SIZE];
 int pipe_fd[PROCESS_SIZE][2];
 
+// ctrl-c interruption handler
+void sigint_handler() {
+  if (jump_active == 0) return;
+  siglongjmp(env, 42);
+}
+
 // exit mumsh with cmd "exit"
 int mumsh_cmd_exit() {
   if (cmd.cnt == 1 && cmd.cmds[0].argc >= 1 &&
@@ -106,6 +112,12 @@ void mumsh_exec_cmds() {
     if (pid < 0) {
       exit_process(UNEXPECTED_ERROR, "");
     } else if (pid == 0) {  // child process
+      // subscribe ctrl-c notification for child process
+      struct sigaction sa_child_SIGINT;
+      sa_child_SIGINT.sa_handler = sigint_handler;
+      sigemptyset(&sa_child_SIGINT.sa_mask);
+      sa_child_SIGINT.sa_flags = SA_RESTART;
+      sigaction(SIGINT, &sa_child_SIGINT, NULL);
       // input redirection only in first cmd
       if (i == 0) input_redirect();
       // left pipe
@@ -134,21 +146,31 @@ void mumsh_exec_cmds() {
       close(pipe_fd[i - 1][READ]);
     }
   }
-
   // todo: handle background jobs here
-
   // wait for child process done
-  for (size_t i = 0; i < cmd.cnt; i++) waitpid(pids[i], NULL, WUNTRACED);
-
+  int status;
+  for (size_t i = 0; i < cmd.cnt; i++) {
+    waitpid(pids[i], &status, WUNTRACED);
+    // debug_child_exit_status(pids[i], status);
+  }
   // reset parent as terminal foreground process group leader
   tcsetpgrp(STDOUT_FILENO, getpgrp());
-
-  // handle ctrl-c interrupt
-  if (ctrl_c == SIGINT) {
-    ctrl_c = 0;
+  // handle ctrl-c interruption
+  if (WIFSIGNALED(status)) {
     printf("\n");
     fflush(stdout);
   }
+}
+
+void debug_child_exit_status(pid_t pid, int status) {
+  if (WIFEXITED(status))
+    printf("child %d exited normally with status %d\n", pid,
+           WEXITSTATUS(status));
+  else if (WIFSIGNALED(status))
+    printf("child %d exited by signal %d\n", pid, WTERMSIG(status));
+  else
+    printf("child %d neither exited normally nor by a signal\n", pid);
+  fflush(stdout);
 }
 
 // exit process with specified message and exit code

@@ -44,7 +44,6 @@ typedef struct parser {
   char buffer[BUFFER_SIZE];
 } parser_t;
 
-extern int ctrl_c;
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
 

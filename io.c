@@ -1,10 +1,6 @@
 #include "io.h"
 
-int ctrl_c;
 char cmd_buffer[BUFFER_SIZE];
-
-// ctrl-c interruption handler
-void sigint_handler() { ctrl_c = SIGINT; }
 
 // read cmd into buffer
 void mumsh_read_cmds() {
@@ -23,10 +19,7 @@ void read_dangling_cmds(char *buffer) {
 void write_cmd_buffer(char *buffer) {
   int ch = 0, i = 0;
   while ((ch = getchar())) {
-    if (ctrl_c == SIGINT)
-      break;
-    else if (ch == EOF)
-      exit_process(NORMAL, "");
+    if (ch == EOF) exit_process(NORMAL, "");
     buffer[i++] = (char)ch;
     if (ch == '\n') {
       buffer[i] = '\0';

@@ -11,6 +11,6 @@ int mumsh_parser();
 void free_memory();
 int syntax_error(int error_type, char* content);
 
-void debug();
+void debug_parser();
 
 #endif  // PARSER_H

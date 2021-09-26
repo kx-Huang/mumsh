@@ -1,9 +1,9 @@
 #include "parser.h"
 
+// structs storing cmds
 cmd_t cmd;
 
-void debug() {
-  // printf("cmd cnt: %lu\n", cmd.cnt);
+void debug_parser() {
   for (size_t i = 0; i < cmd.cnt; i++)
     for (size_t j = 0; j < cmd.cmds[i].argc; j++)
       printf("argv[%lu][%lu]: \"%s\" %p\n", i, j, cmd.cmds[i].argv[j],
@@ -15,7 +15,8 @@ void debug() {
   printf("append? %d\n", cmd.append_file);
 }
 
-void init_cmd() {
+// clear cmd struct for coming loop
+void reset_cmd() {
   cmd.cnt = 0;
   cmd.read_file = 0;
   cmd.write_file = 0;
@@ -25,12 +26,11 @@ void init_cmd() {
   memset(cmd.cmds, 0, COMMAND_SIZE);
 }
 
+// parse command line input into executable cmd token
 int mumsh_parser() {
   // initialize data structure
-  init_cmd();
   parser_t parser = {0, 0, 0, 0, 0, 0, {0}};
   token_t token = {0, {NULL}};
-
   // finite state machine
   for (size_t i = 0; i < BUFFER_SIZE; i++) {
     // out of quotation region
@@ -63,6 +63,8 @@ int mumsh_parser() {
             // save buffer as argument
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
+            // printf("malloc memory: %p, allocate size: %lu\n",
+            // (void*)(token.argv[token.argc]), parser.buffer_len + 1);
             strcpy(token.argv[token.argc++], parser.buffer);
           }
           // clear buffer
@@ -123,7 +125,6 @@ int mumsh_parser() {
       } else {  // ordinary character, push into buffer
         parser.buffer[parser.buffer_len++] = cmd_buffer[i];
       }
-
       // in between quotation region
     } else {
       // dangling quotation
@@ -146,13 +147,17 @@ int mumsh_parser() {
   return NORMAL;
 }
 
-// free after malloc for cmd and token
+// free after allocating memory for token and reset cmd struct
 void free_memory() {
   for (size_t i = 0; i < cmd.cnt; i++)
-    for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
+    for (size_t j = 0; j < cmd.cmds[i].argc; j++) {
+      free(cmd.cmds[i].argv[j]);
+      // printf("free memory: %p\n", (void*)(cmd.cmds[i].argv[j]));
+    }
+  reset_cmd();
 }
 
-// exit with exit code
+// terminate parsing function due to syntax error
 int syntax_error(int error_type, char* content) {
   switch (error_type) {
     case DUP_INPUT_REDIRECTION:
