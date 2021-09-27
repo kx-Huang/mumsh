@@ -1,14 +1,25 @@
 #include "process.h"
 
-// initialize OLDPWD for built-in cmd "cd -"
-char OLDPWD[BUFFER_SIZE];
-pid_t pids[PROCESS_SIZE];
-int pipe_fd[PROCESS_SIZE][2];
+job_t job;                     // store background jobs for cmd "jobs"
+char OLDPWD[BUFFER_SIZE];      // store last working directory for cmd "cd -"
+pid_t pids[PROCESS_SIZE];      // store child process pid for process control
+int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
 
 // ctrl-c interruption handler
 void sigint_handler() {
   if (jump_active == 0) return;
   siglongjmp(env, 42);
+}
+
+// reap background jobs
+void reap_background_jobs() {
+  for (size_t i = 0; i < job.cnt; i++) {
+    int status;
+    pid_t res;
+    res = waitpid(-1, &status, WNOHANG);
+    //debug_process(res, status);
+    if (res > 0) job.cnt--;
+  }
 }
 
 // exit mumsh with cmd "exit"
@@ -50,6 +61,15 @@ int mumsh_cmd_cd() {
       }
     }
     return NORMAL;
+  }
+  return -1;
+}
+
+int mumsh_cmd_jobs() {
+  if (cmd.cnt == 1 && cmd.cmds[0].argc == 1 &&
+      strcmp(cmd.cmds[0].argv[0], "jobs") == 0) {
+    printf("print jobs here!\n");
+    return 0;
   }
   return -1;
 }
@@ -137,30 +157,37 @@ void mumsh_exec_cmds() {
       exec_cmd(&cmd.cmds[i]);
     }
     // parent process
-    // set first child process as terminal foreground process group leader
+    // put all child process into group of first child
     setpgid(pids[i], pids[0]);
-    if (i == 0) tcsetpgrp(STDIN_FILENO, pids[0]);
-    // close last pipe
+    // set group of first child as foreground process group
+    if (cmd.background == 0)
+      if (i == 0) tcsetpgrp(STDIN_FILENO, pids[0]);
+    // close previous pipe
     if (cmd.cnt > 1 && i != 0) {
       close(pipe_fd[i - 1][WRITE]);
       close(pipe_fd[i - 1][READ]);
     }
   }
-  // todo: handle background jobs here
-  // wait for child process done
-  int status;
-  pid_t res;
-  for (size_t i = 0; i < cmd.cnt; i++) {
-    res = waitpid(-pids[0], &status, WUNTRACED);
-    //debug_process(res, status);
+  // reap foreground cmds
+  if (cmd.background == 0) {
+    int status;
+    pid_t res;
+    // block parent process and wait for child process done
+    for (size_t i = 0; i < cmd.cnt; i++) {
+      res = waitpid(-pids[0], &status, WUNTRACED);
+      //debug_process(res, status);
+    }
+    // reset parent as terminal foreground process group leader
+    tcsetpgrp(STDOUT_FILENO, getpgrp());
+    // handle ctrl-c interruption
+    if (WIFSIGNALED(status)) {
+      printf("\n");
+      fflush(stdout);
+    }
   }
-  // reset parent as terminal foreground process group leader
-  tcsetpgrp(STDOUT_FILENO, getpgrp());
-  // handle ctrl-c interruption
-  if (WIFSIGNALED(status)) {
-    printf("\n");
-    fflush(stdout);
-  }
+  // add background job count for reaping in next loop
+  else
+    job.cnt += cmd.cnt;
 }
 
 // print child process exit status

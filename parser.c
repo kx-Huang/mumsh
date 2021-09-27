@@ -68,7 +68,7 @@ int mumsh_parser() {
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
             // printf("malloc memory: %p, allocate size: %lu\n",
-            // (void*)(token.argv[token.argc]), parser.buffer_len + 1);
+            //     (void*)(token.argv[token.argc]), parser.buffer_len + 1);
             strcpy(token.argv[token.argc++], parser.buffer);
           }
           // clear buffer
