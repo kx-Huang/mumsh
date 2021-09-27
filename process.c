@@ -1,8 +1,8 @@
 #include "process.h"
 
 job_t job;                     // store background jobs for cmd "jobs"
+pid_t pgid;                    // store child process group pid for grouping
 char OLDPWD[BUFFER_SIZE];      // store last working directory for cmd "cd -"
-pid_t pids[PROCESS_SIZE];      // store child process pid for process control
 int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
 
 // ctrl-c interruption handler
@@ -196,7 +196,8 @@ void mumsh_exec_cmds() {
       if (pipe(pipe_fd[i]) != 0) return;
     // fork a child process
     pid_t pid = fork();
-    pids[i] = pid;
+    // set first child as children process group leader
+    if (i == 0) pgid = pid;
     if (pid < 0) {
       exit_process(UNEXPECTED_ERROR, "");
     } else if (pid == 0) {  // child process
@@ -226,10 +227,10 @@ void mumsh_exec_cmds() {
     }
     // parent process
     // put all child process into group of first child
-    setpgid(pids[i], pids[0]);
+    setpgid(pid, pgid);
     // set group of first child as foreground process group
     if (cmd.background == 0) {
-      if (i == 0) tcsetpgrp(STDIN_FILENO, pids[0]);
+      if (i == 0) tcsetpgrp(STDIN_FILENO, pgid);
     } else {  // save pid of background cmd into jobs table
       job.pid_table[job.job_cnt][i] = pid;
     }
@@ -245,7 +246,7 @@ void mumsh_exec_cmds() {
     pid_t res;
     // block parent process and wait for child process done
     for (size_t i = 0; i < cmd.cnt; i++) {
-      res = waitpid(-pids[0], &status, WUNTRACED);
+      res = waitpid(-pgid, &status, WUNTRACED);
       // debug_process(res, status);
     }
     // reset parent as terminal foreground process group leader
