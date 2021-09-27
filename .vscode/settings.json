@@ -63,6 +63,7 @@
         "typeinfo": "c",
         "unordered_map": "c",
         "utility": "c",
-        "vector": "c"
+        "vector": "c",
+        "hash_map": "c"
     }
 }

@@ -13,12 +13,20 @@ void sigint_handler() {
 
 // reap background jobs
 void reap_background_jobs() {
-  for (size_t i = 0; i < job.cnt; i++) {
+  size_t max_loop = job.bg_cnt;
+  for (size_t i = 0; i < max_loop; i++) {
     int status;
-    pid_t res;
-    res = waitpid(-1, &status, WNOHANG);
-    //debug_process(res, status);
-    if (res > 0) job.cnt--;
+    pid_t pid;
+    pid = waitpid(-1, &status, WNOHANG);
+    // debug_process(pid, status);
+    if (pid > 0) {
+      job.bg_cnt--;
+      for (size_t i = 0; i < job.job_cnt; i++)
+        for (size_t j = 0; job.pid_table[i][j] != 0; j++) {
+          if (job.stat_table[i] == 0) continue;
+          if (job.pid_table[i][j] == pid) job.stat_table[i]--;
+        }
+    }
   }
 }
 
@@ -65,10 +73,18 @@ int mumsh_cmd_cd() {
   return -1;
 }
 
+// traverse status table to print jobs
 int mumsh_cmd_jobs() {
   if (cmd.cnt == 1 && cmd.cmds[0].argc == 1 &&
       strcmp(cmd.cmds[0].argv[0], "jobs") == 0) {
-    printf("print jobs here!\n");
+    for (size_t i = 0; i < job.job_cnt; i++) {
+      printf("[%lu] ", i + 1);
+      if (job.stat_table[i])
+        printf("running ");
+      else
+        printf("done ");
+      printf("%s", job.cmd_table[i]);
+    }
     return 0;
   }
   return -1;
@@ -114,14 +130,66 @@ void output_redirect() {
   }
 }
 
+// execute cmd
 void exec_cmd(token_t* token) {
   // error: Non-existing program
   if (execvp(token->argv[0], token->argv) < 0)
     exit_process(NON_EXISTING_PROGRAM, token->argv[0]);
 }
 
+// log background cmds for cmd "jobs"
+void init_jobs_table() {
+  // allocate memory for jobs table
+  if (job.job_cnt == 0) {
+    job.table_size = JOBS_CAPACITY;
+    job.pid_table = malloc(job.table_size * sizeof(pid_t*));
+    job.cmd_table = malloc(job.table_size * sizeof(char*));
+    job.stat_table = malloc(job.table_size * sizeof(size_t));
+  } else if (job.job_cnt == job.table_size) {
+    job.table_size += JOBS_CAPACITY;
+    job.pid_table = realloc(job.pid_table, job.table_size * sizeof(pid_t*));
+    job.cmd_table = realloc(job.cmd_table, job.table_size * sizeof(char*));
+    job.stat_table = realloc(job.stat_table, job.table_size * sizeof(size_t));
+  }
+  job.pid_table[job.job_cnt] = malloc(COMMAND_SIZE * sizeof(pid_t));
+  memset(job.pid_table[job.job_cnt], 0, COMMAND_SIZE);
+  job.stat_table[job.job_cnt] = cmd.cnt;
+}
+
+// safety append for sprintf
+int add_bytes(int res_sprintf) { return (res_sprintf > 0) ? res_sprintf : 0; }
+
+// prompt formatted background cmds
+void print_formatted_cmds() {
+  int len = 0;
+  char* buffer = malloc(BUFFER_SIZE);
+  for (size_t i = 0; i < cmd.cnt; i++) {
+    for (size_t j = 0; j < cmd.cmds[i].argc; j++)
+      len += add_bytes(sprintf(buffer + len, "%s ", cmd.cmds[i].argv[j]));
+    if (i == 0 && cmd.read_file) {
+      len += add_bytes(sprintf(buffer + len, "< %s", cmd.src));
+      if (cmd.cnt > 1) len += add_bytes(sprintf(buffer + len, " "));
+    }
+    if ((i != cmd.cnt - 1)) len += add_bytes(sprintf(buffer + len, "| "));
+  }
+  if (cmd.write_file) {
+    len += add_bytes(sprintf(buffer + len, ">"));
+    if (cmd.append_file) len += add_bytes(sprintf(buffer + len, ">"));
+    len += add_bytes(sprintf(buffer + len, " %s ", cmd.dest));
+  }
+  if (cmd.background) len += add_bytes(sprintf(buffer + len, "&\n"));
+  printf("%s", buffer);
+  job.cmd_table[job.job_cnt] = buffer;
+}
+
 // execute cmd sequence
 void mumsh_exec_cmds() {
+  // print background cmds
+  if (cmd.background) {
+    init_jobs_table();
+    printf("[%lu] ", job.job_cnt + 1);
+    print_formatted_cmds();
+  }
   for (size_t i = 0; i < cmd.cnt; i++) {
     // open new pipe
     if (cmd.cnt > 1 && i != cmd.cnt - 1)
@@ -160,8 +228,11 @@ void mumsh_exec_cmds() {
     // put all child process into group of first child
     setpgid(pids[i], pids[0]);
     // set group of first child as foreground process group
-    if (cmd.background == 0)
+    if (cmd.background == 0) {
       if (i == 0) tcsetpgrp(STDIN_FILENO, pids[0]);
+    } else {  // save pid of background cmd into jobs table
+      job.pid_table[job.job_cnt][i] = pid;
+    }
     // close previous pipe
     if (cmd.cnt > 1 && i != 0) {
       close(pipe_fd[i - 1][WRITE]);
@@ -175,7 +246,7 @@ void mumsh_exec_cmds() {
     // block parent process and wait for child process done
     for (size_t i = 0; i < cmd.cnt; i++) {
       res = waitpid(-pids[0], &status, WUNTRACED);
-      //debug_process(res, status);
+      // debug_process(res, status);
     }
     // reset parent as terminal foreground process group leader
     tcsetpgrp(STDOUT_FILENO, getpgrp());
@@ -184,10 +255,22 @@ void mumsh_exec_cmds() {
       printf("\n");
       fflush(stdout);
     }
+  } else {  // add background job count for reaping in next loop
+    job.job_cnt++;
+    job.bg_cnt += cmd.cnt;
+    // debug_jobs();
   }
-  // add background job count for reaping in next loop
-  else
-    job.cnt += cmd.cnt;
+}
+
+// free after allocating memory for jobs table
+void free_jobs() {
+  for (size_t i = 0; i < job.job_cnt; i++) {
+    free(job.pid_table[i]);
+    free(job.cmd_table[i]);
+  }
+  free(job.pid_table);
+  free(job.cmd_table);
+  free(job.stat_table);
 }
 
 // print child process exit status
@@ -200,6 +283,14 @@ void debug_process(pid_t pid, int status) {
   else
     printf("child %d neither exited normally nor by a signal\n", pid);
   fflush(stdout);
+}
+
+// print jobs log
+void debug_jobs() {
+  // printf("jobs table capacity: %lu\n", job.table_size);
+  for (size_t i = 0; i < job.job_cnt; i++)
+    for (size_t j = 0; job.pid_table[i][j] != 0; j++)
+      printf("job[%lu][%lu]: %d\n", i, j, job.pid_table[i][j]);
 }
 
 // exit process with specified message and exit code

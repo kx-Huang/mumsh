@@ -29,7 +29,7 @@ int main() {
       printf("\n");
       // reap background jobs triggered by ctrl-c
       reap_background_jobs();
-      free_memory();
+      free_cmds();
       continue;
     }
     // safe lock in case ctrl-c come before jump point is set
@@ -40,30 +40,32 @@ int main() {
     reap_background_jobs();
     // parse input command
     if (mumsh_parser() != NORMAL) {  // free allocated memory
-      free_memory();
+      free_cmds();
       continue;
     }
-    // debug_parser();
+    //debug_parser();
     // no command exist
     if (cmd.cnt == 0) continue;
     // cmd "exit"
     if (mumsh_cmd_exit() == NORMAL) {
-      free_memory();
+      free_cmds();
+      free_jobs();
       exit_process(NORMAL, "");
     }
     // built-in cmd "cd"
     if (mumsh_cmd_cd() == NORMAL) {
-      free_memory();
+      free_cmds();
       continue;
     }
     // built-in cmd "jobs"
     if (mumsh_cmd_jobs() == NORMAL) {
-      free_memory();
+      free_cmds();
       continue;
     }
     // execute cmds which run in child process
     mumsh_exec_cmds();
     // free allocated memory
-    free_memory();
+    free_cmds();
   }
+  free_jobs();
 }

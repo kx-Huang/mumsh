@@ -46,6 +46,8 @@ int mumsh_parser() {
           if (strchr("<>|&", cmd_buffer[i]) != NULL) {
             // error 6: Syntax Error
             if (parser.is_dest || parser.is_src) {
+              if (token.argc > 0)
+                cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
               if (cmd_buffer[i] == '<') return syntax_error(ERROR_SYNTAX, "<");
               if (cmd_buffer[i] == '>') return syntax_error(ERROR_SYNTAX, ">");
               if (cmd_buffer[i] == '|') return syntax_error(ERROR_SYNTAX, "|");
@@ -68,7 +70,7 @@ int mumsh_parser() {
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
             // printf("malloc memory: %p, allocate size: %lu\n",
-            //     (void*)(token.argv[token.argc]), parser.buffer_len + 1);
+            // (void*)(token.argv[token.argc]), parser.buffer_len + 1);
             strcpy(token.argv[token.argc++], parser.buffer);
           }
           // clear buffer
@@ -81,13 +83,20 @@ int mumsh_parser() {
         // set buffer state for redirector
         if (cmd_buffer[i] == '<') {
           // error 4: Duplicated input redirection
-          if (cmd.read_file || parser.is_pipe)
+          if (cmd.read_file || parser.is_pipe) {
+            if (token.argc > 0)
+              cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
             return syntax_error(DUP_INPUT_REDIRECTION, "");
+          }
           parser.is_dest = 0;
           parser.is_src = 1;
         } else if (cmd_buffer[i] == '>') {
           // error 5: Duplicated output redirection
-          if (cmd.write_file) return syntax_error(DUP_OUTPUT_REDIRECTION, "");
+          if (cmd.write_file) {
+            if (token.argc > 0)
+              cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
+            return syntax_error(DUP_OUTPUT_REDIRECTION, "");
+          }
           parser.is_src = 0;
           parser.is_dest = 1;
           if (cmd_buffer[i + 1] == '>') {  // >>
@@ -99,7 +108,11 @@ int mumsh_parser() {
           // error 7: Missing program
           if (token.argc == 0) return syntax_error(MISS_PROGRAM, "");
           // error 5: Duplicated output redirection
-          if (cmd.write_file) return syntax_error(DUP_OUTPUT_REDIRECTION, "");
+          if (cmd.write_file) {
+            if (token.argc > 0)
+              cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
+            return syntax_error(DUP_OUTPUT_REDIRECTION, "");
+          }
           cmd.cmds[cmd.cnt++] = token;
           // reset token
           token.argc = 0;
@@ -118,7 +131,8 @@ int mumsh_parser() {
           if (token.argc == 0) {
             if (cmd.read_file || cmd.write_file)
               return syntax_error(MISS_PROGRAM, "");
-            if (cmd.cnt == 0) return NORMAL;
+            if (cmd.cnt == 0 && parser.is_src == 0 && parser.is_dest == 0)
+              return -1;
           }
           if (parser.is_dest || parser.is_src ||
               (parser.is_pipe && token.argc == 0)) {
@@ -140,6 +154,7 @@ int mumsh_parser() {
     } else {
       // dangling quotation
       if (cmd_buffer[i] == '\n') {
+        parser.buffer[parser.buffer_len++] = '\n';
         read_dangling_cmds(&cmd_buffer[i + 1]);
         continue;
         // single quotation ends
@@ -159,12 +174,13 @@ int mumsh_parser() {
 }
 
 // free after allocating memory for token and reset cmd struct
-void free_memory() {
-  for (size_t i = 0; i < cmd.cnt; i++)
+void free_cmds() {
+  for (size_t i = 0; i < cmd.cnt; i++) {
     for (size_t j = 0; j < cmd.cmds[i].argc; j++) {
       free(cmd.cmds[i].argv[j]);
       // printf("free memory: %p\n", (void*)(cmd.cmds[i].argv[j]));
     }
+  }
   reset_cmd();
 }
 
