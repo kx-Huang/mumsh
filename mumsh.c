@@ -57,11 +57,6 @@ int main() {
       free_cmds();
       continue;
     }
-    // built-in cmd "jobs"
-    if (mumsh_cmd_jobs() == NORMAL) {
-      free_cmds();
-      continue;
-    }
     // execute cmds which run in child process
     mumsh_exec_cmds();
     // free allocated memory

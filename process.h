@@ -35,7 +35,7 @@ void output_redirect();
 void mumsh_exec_cmds();
 int mumsh_cmd_exit();
 int mumsh_cmd_cd();
-int mumsh_cmd_jobs();
+void mumsh_cmd_jobs(token_t* token);
 void mumsh_cmd_pwd(token_t* token);
 void exec_cmd(token_t* token);
 void free_jobs();

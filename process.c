@@ -74,9 +74,8 @@ int mumsh_cmd_cd() {
 }
 
 // traverse status table to print jobs
-int mumsh_cmd_jobs() {
-  if (cmd.cnt == 1 && cmd.cmds[0].argc == 1 &&
-      strcmp(cmd.cmds[0].argv[0], "jobs") == 0) {
+void mumsh_cmd_jobs(token_t* token) {
+  if (token->argc == 1 && strcmp(token->argv[0], "jobs") == 0) {
     for (size_t i = 0; i < job.job_cnt; i++) {
       printf("[%lu] ", i + 1);
       if (job.stat_table[i])
@@ -85,9 +84,9 @@ int mumsh_cmd_jobs() {
         printf("done ");
       printf("%s", job.cmd_table[i]);
     }
-    return 0;
+    fflush(stdout);
+    exit(NORMAL);
   }
-  return -1;
 }
 
 // print working directory built-in cmd "pwd"
@@ -222,6 +221,7 @@ void mumsh_exec_cmds() {
       // output redirection only in last cmd
       if (i == cmd.cnt - 1) output_redirect();
       // exec cmd
+      mumsh_cmd_jobs(&cmd.cmds[i]);
       mumsh_cmd_pwd(&cmd.cmds[i]);
       exec_cmd(&cmd.cmds[i]);
     }
