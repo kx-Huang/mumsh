@@ -105,62 +105,73 @@ Now, we have our components of input to play with, and we can try it out in `mum
 - interrupt all executing commands in foreground with `CTRL-C`
 - cases:
   - clear user input and prompt new line
+
     ```sh
-      mumsh $ echo ^C
-      mumsh $
+    mumsh $ echo ^C
+    mumsh $
     ```
+
   - interrupt single executing command
+
     ```sh
-      mumsh $ sleep 10
-      ^C
-      mumsh $
+    mumsh $ sleep 10
+    ^C
+    mumsh $
     ```
+
   - interrupt multiple executing commands
+
     ```sh
-      mumsh $ sleep 10 | sleep 10 | sleep 10
-      ^C
-      mumsh $
+    mumsh $ sleep 10 | sleep 10 | sleep 10
+    ^C
+    mumsh $
     ```
+
   - CTRL-C don't interrupt background jobs
+
     ```sh
-      mumsh $ sleep 10 &
-      [1] sleep 10 &
-      mumsh $ ^C
-      mumsh $ jobs
-      [1] running sleep 10 &
-      mumsh $
+    mumsh $ sleep 10 &
+    [1] sleep 10 &
+    mumsh $ ^C
+    mumsh $ jobs
+    [1] running sleep 10 &
+    mumsh $
     ```
 
 ### CTRL-D
 - if `mumsh` has no user input, `CTRL-D` will exit `mumsh`
+
   ```sh
-    mumsh $ exit
-    $
+  mumsh $ exit
+  $
   ```
 - if `mumsh` has user input, do nothing
+
   ```sh
-    mumsh $ echo ^D
+  mumsh $ echo ^D
   ```
 
 ### Quotes
 - `mumsh` takes any character between `"` or `'` as ordinary character without special meaning.
+
   ```sh
-    mumsh $ echo hello "| grep 'h' > 1.txt"
-    hello | grep 'h' > 1.txt
-    mumsh $
+  mumsh $ echo hello "| grep 'h' > 1.txt"
+  hello | grep 'h' > 1.txt
+  mumsh $
   ```
 
 ### Background Jobs
 - If `&` is added at the end of user input, `mumsh` will run jobs in background instead of waiting for execution to be done.
 - Command `jobs` can keep track on every background jobs, no matter a job is `done` or `running`
 - `mumsh` support pipe in background jobs
+
   ```sh
-    mumsh $ sleep 10 &
-    [1] sleep 10 &
-    mumsh $ sleep 1 | sleep 1 | sleep 1 &
-    [2] sleep 1 | sleep 1 | sleep 1 &
-    mumsh $ jobs
-    [1] running sleep 10 &
-    [2] done sleep 1 | sleep 1 | sleep 1 &
-    mumsh $
+  mumsh $ sleep 10 &
+  [1] sleep 10 &
+  mumsh $ sleep 1 | sleep 1 | sleep 1 &
+  [2] sleep 1 | sleep 1 | sleep 1 &
+  mumsh $ jobs
+  [1] running sleep 10 &
+  [2] done sleep 1 | sleep 1 | sleep 1 &
+  mumsh $
   ```
