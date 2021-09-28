@@ -35,7 +35,7 @@ If everything is normal, we can see in the terminal `mumsh $ `, which indicates 
 
 ### Overall `mumsh` Grammar in Backus­Naur Form
 ``` sh
-cmd [argv]* [ | cmd [argv]* ]* [[> filename] [< filename] [>> filename]]* [&]
+cmd [argv]* [| cmd [argv]* ]* [[> filename][< filename][>> filename]]* [&]
 ```
 
 Seems abstract and mayebe get a little bit confused? Let me explain a little more. For more details, please check the following sections.
