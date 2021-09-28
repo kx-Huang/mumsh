@@ -22,6 +22,8 @@ We have 4 kinds of files in this project:
   - `parser.h`
   - `process.h`: store global varbles for jobs only regarding process
   - `data.h`: store extern global varibles for read/parse/execute loop
+- makefile
+  - used for quick build and clean of executable file
 
 ## Build and Run `mumsh`
 - build: `$ make`
@@ -29,4 +31,4 @@ We have 4 kinds of files in this project:
 
 If everything is normal, you can see in the terminal `mumsh $ `, which indicates that `mumsh` is up and running, waiting for your input.
 
-## 
+## Play with `mumsh`
