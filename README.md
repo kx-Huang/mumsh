@@ -310,13 +310,8 @@ Still remember there's [a question left in 3.1.1](#311-a-question-remains)? Why 
 
 ```C
 void check_cmd_exit(){
-   if (strcmp(cmd, "exit") == 0) exit(0); // exit in parent process
-}
-
-void execute_cmds(){
-  pid_t pid = fork();
-  if (pid == 0) {
-    execvp(cmd, argv);
+  if (strcmp(cmd, "exit") == 0) {
+    exit(0); // exit in parent process
   }
 }
 
@@ -335,6 +330,12 @@ For normal commands like `ls` and `pwd`, our shell `execute commands` by `callin
 Similarly, we should implement command `cd` (change working directory) as `built-in command` in parent process, because if we run `cd` in child process, we change working directory for child `mumsh` instead of parent `mumsh`, and obviously, that's wrong, we want `cd` takes effect permanently.
 
 ```C
+void check_cmd_cd(){
+  if (strcmp(cmd, "cd") == 0) {
+    chdir(argv); // system call
+  }
+}
+
 int main(){
   while(1){
     read_user_input();
@@ -353,7 +354,7 @@ To be clear, `built-in commands` are not equal or related to `commands run in pa
 ```C
 void check_cmd_pwd(){
   if (strcmp(cmd, "pwd") == 0) {
-    getcwd(buffer, BUFFER_SIZE);
+    getcwd(buffer, BUFFER_SIZE); // system call
     printf("%s\n", buffer);
     exit(0); // in child process now, don't forget to exit!
   }
@@ -379,3 +380,45 @@ int main(){
 ```
 
 Until now, the basic structure of `mumsh` has been constructed.
+
+```C
+void check_cmd_cd(){
+  if (strcmp(cmd, "cd") == 0) {
+    chdir(argv); // system call
+  }
+}
+
+void check_cmd_exit(){
+  if (strcmp(cmd, "exit") == 0) {
+    exit(0); // exit parent process
+  }
+}
+
+void check_cmd_pwd(){
+  if (strcmp(cmd, "pwd") == 0) {
+    getcwd(buffer, BUFFER_SIZE); // system call
+    printf("%s\n", buffer);
+    exit(0); // exit child process
+  }
+}
+
+void execute_cmds(){
+  pid_t pid = fork();
+  if (pid == 0) { // child process
+    check_cmd_pwd();
+    execvp(cmd, argv); // system call
+  }
+}
+
+int main(){
+  while(1){
+    read_user_input();
+    parser();
+    check_cmd_exit();
+    check_cmd_cd();
+    execute_cmds();
+  }
+}
+```
+
+### 3.4 `waitpid()` System Call
