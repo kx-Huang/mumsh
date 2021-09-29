@@ -7,7 +7,7 @@ In this `README`, the following content will be included:
 3.  how to play with `mumsh`
 4.  how `mumsh` is constructed
 
-## Files related to project `mumsh`
+## 1. Files related to project `mumsh`
 We have 4 kinds of files in this project:
 - README
   - It's strongly adviced to read `README.md` before running `mumsh` or reading source code, since it may give us more sense of what `mumsh` is doing in each stage.
@@ -25,13 +25,13 @@ We have 4 kinds of files in this project:
 - makefile
   - used for quick build and clean of executable file
 
-## Build and Run `mumsh`
+## 2. Build and Run `mumsh`
 - build: `$ make`
 - run: `$ ./mumsh`
 
 If everything is normal, we can see in the terminal `mumsh $ `, which indicates that `mumsh` is up and running, waiting for your input.
 
-## Play with `mumsh`
+## 3. Play with `mumsh`
 
 ### Overall `mumsh` Grammar in Backus­Naur Form
 ``` sh
@@ -46,17 +46,17 @@ The input of `mumsh` can be made up of 3 components:
 3.  pipe indicator: `|`
 4.  background job indicator: `&`
 
-#### 1. Command and Argument
+#### 1) Command and Argument
 - `cmd` is a must, or `mumsh` will raise `error: missing program`
 - `argv` is optional, we can choose to call a command with arguments or not.
 
-#### 2. Redirector and Filename
+#### 2) Redirector and Filename
 - `<`, `>`, `>>` is optional, but we should input redirector along with filename
   - if any `<, >, |, &` instead of `filename` follows, `mumsh` will raise `error: syntax error near unexpected token ...`
   - if no character follows, `mumsh` will prompt us to keep input in newline
 - `>` and `>>` can't exist in the same command, or `mumsh` will raise `error: duplicated output redirection`
 
-#### 3. Pipe Indicator
+#### 3) Pipe Indicator
 - `|` is optional, but we should input `|` after one command and followed by another command
   - if no command before `|`, `mumsh` will raise `error: missing program`
   - if no character after `|`, `mumsh` will prompt us to keep input in newline
@@ -64,7 +64,7 @@ The input of `mumsh` can be made up of 3 components:
   - if `>` or `>>` comes before `|`, `mumsh` will raise `error: duplicated output redirection`
   - if `<` comes after `|`, `mumsh` will raise `error: duplicated input redirection`
 
-#### 4. Background Job Indicator
+#### 4) Background Job Indicator
 - `&` is optional, but we should only input `&` at the end of input, or `mumsh` will ignore the character(s) after `&` is detected.
 
 Now, we have our components of input to play with, and we can try it out in `mumsh` by assembling them into a whole input. As long as `mumsh` doesn't raise an error, your input syntax is valid, even though your input may give no output.
@@ -77,7 +77,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
   - `jobs`: print background jobs status
 - executable commands (call other programs to do certain jobs)
   - `ls`: call program `/bin/ls`, which print files in current working directory
-  - `bash`: call shell `bash`, which is also a shell like `mumsh` but with more powerful capabilities
+  - `bash`: call shell `/bin/bash`, which is also a shell like `mumsh` but with more powerful capabilities
   - we can input `ls /bin` to see more executable commands
 
 ### I/0 Redirection (support bash style syntax)
@@ -175,3 +175,133 @@ Now, we have our components of input to play with, and we can try it out in `mum
   [2] done sleep 1 | sleep 1 | sleep 1 &
   mumsh $
   ```
+
+## 4. Construct `mumsh` Step by Step
+
+In this section, we will go through the construction of `mumsh` step by step, giving us a general concept of how this shell work. This section is intended for helping **beginners** (just as me a week ago) grab some basic concept for implementing a shell.
+
+However, some contents such as detailed data structure and marginal logic will be neglected. And the demo code is used for our better understanding instead of doing copy and paste. As a result, the grammar is not strictly follow the C standard. For more detail, we can read the source code directly. It's strongly recommended to understand the concept before doing any coding.
+
+### Main read/parse/execute Loop (1)
+As we all know, a shell is a computer program which exposes an operating system's services to a human user or other program. It repeatedly takes commands from the keyboard, gives them to the operating system to perform and deliver corresponding output.
+
+As a result, the first step for us is to have a main loop, repeatedly doing 3 things:
+  1. read user input
+  2. parse input into commands
+  3. execute the commands
+
+```C
+ int main(){
+   while(1){
+     read_user_input();
+     parser(); // let's call it parser, who parses user input into commands
+     execute_cmds();
+   }
+ }
+```
+
+Now we have the basic structure of a shell, but you may notice that it runs forever. As a result, we need a exit-checking funtion in the main loop. If users want to exit the shell, they can just input the command `exit` and that's it, our shell just exit.
+
+
+```C
+void check_cmd_exit(char* cmd){
+   if (strcmp(cmd, "exit") == 0) exit(0);
+}
+
+int main(){
+  while(1){
+    read_user_input();
+    parser();
+    check_cmd_exit(cmd); // if user input "exit", exit here
+    execute_cmds();
+  }
+}
+```
+
+You may argue that this exit-checking funtion can be in the part of `execute_cmds()`. Of course we can do that, but personally I perfer put it in the main loop. And the reason for this is exactly what makes the most important part: how is a command executed in the shell?
+
+### Execute a cmd: `fork()` and `execvp()` System Calls
+
+First, what is a system call? From Linux manual page, it writes
+
+> "The system call is the fundamental interface between an application and the Linux kernel."
+
+Basically, if we want our `computer program` requests a service from `the kernal of the operating system`, we use system call.
+
+Just to recap, when we input `ls` in shell, the shell calls the program `/bin/ls`. More precisely, the shell asks `the kernal of the operating system` to execute the program `/bin/ls`.
+
+To do so, we have to use `execvp()`, which is a system call under the library `<unistd.h>`, and it "replaces the current process image with a new process image". When `execvp()` is executed, the program file given by the first argument will be loaded into the caller's address space and over-write the program there.
+
+For example, once the program we call (e.g. `/bin/ls`) starts its execution, the original program in the caller's address space (`mumsh`) is gone and is replaced by the new program (`/bin/ls`). Here "gone" means our `mumsh` just somehow vanished, the only program left is `/bin/ls`. Once `/bin/ls` finishes its jobs, nothing will be left.
+
+Apparently, this should never happen for a shell to run normally. We still need our shell up and running! As a result, we use another system call: `fork()`.
+
+But before getting into `fork()`, let's first talk about "process". In Linux, a process is "any active (running) instance of a program". Aforementioned `execvp()` system call just replace one program with another in a process, but it doesn't create a new process to make both programs execute at the same time. And here comes the `fork()` system call.
+
+The `fork()` system call "creates a new process by duplicating the calling process. The new process is referred to as the `child process`. The calling process is referred to as the `parent process`." In this case, if we execute `/bin/ls` in child process, my `mumsh` process won't vanish.
+
+Now, we have everything prepared:
+1. use `fork()` system call to create a child process
+2. use `execvp()` system call to execute the program in child process
+
+```C
+void execute_cmds(){
+  pid_t pid = fork();
+  // child and parent process reach here with differnt pid (process ID)
+  if (pid == 0) { // fork() return 0 in child process
+    // child process starts here
+    execvp(cmd, argv);
+    // child process won't reach here!
+  } else { // fork() return child pid in parent process
+  // parent process jumps here
+  }
+}
+```
+
+You may ask why the child process can't procceed after `execvp()`, and that's because `execvp()` system call have a unique feature: it never return if no error occurs. Basically, `execvp()`
+- replace the program of caller (duplicated `mumsh`) on child process created by `fork()` with any program we call
+- the program we call is up and running in that child process
+- the child process terminated as the program finishes its execution
+
+Now that the child process is gone, of course child process will never run the code after `execvp()`. What only left is the parent process.
+
+### Main read/parse/execute Loop (2)
+Still remember there's a question left before? Why do I like to put `check_cmd_exit()` outside of `execute_cmds` in main loop?
+
+```C
+void check_cmd_exit(char* cmd){
+   if (strcmp(cmd, "exit") == 0) exit(0); // exit in parent process
+}
+
+int main(){
+  while(1){
+    read_user_input();
+    parser();
+    check_cmd_exit(cmd); // if user input "exit", exit here
+    execute_cmds();
+  }
+}
+
+void execute_cmds(){
+  pid_t pid = fork();
+  if (pid == 0) {
+    execvp(cmd, argv);
+  }
+}
+```
+
+That's because I take `execute cmds` as `call other programs`, which happens in the child process after we `fork()`. However, our `exit` command should happen in parent process, because we want to exit `mumsh` once and for all instead of shutting down a duplicated child of `mumsh`.
+
+Similarly, we should implement command `cd` (change working directory) in parent process, because if we run `cd` in child process, we change working directory for child `mumsh` instead of parent `mumsh`, and obviously, that's wrong, we want `cd` takes effect permanently.
+
+```C
+int main(){
+  while(1){
+    read_user_input();
+    parser();
+    check_cmd_exit(cmd);
+    check_cmd_cd(cmd); // if user input "cd", change working directory here
+    execute_cmds();
+  }
+}
+```

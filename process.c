@@ -48,8 +48,11 @@ int mumsh_cmd_cd() {
     // cd
     if (cmd.cmds[0].argc == 1) {
       if (chdir(getenv("HOME")) == 0) strcpy(OLDPWD, path);
+      // cd ~
+    } else if (cmd.cmds[0].argv[1] == '~') {
+      if (chdir(getenv("HOME")) == 0) strcpy(OLDPWD, path);
       // cd -
-    } else if (strcmp(cmd.cmds[0].argv[1], "-") == 0) {
+    } else if (strcmp(cmd.cmds[0].argv[1] == '-') == 0) {
       if (strlen(OLDPWD) == 0) {  // no last path
         fputs("cd: OLDPWD not set\n", stderr);
       } else {  // cd to last path
