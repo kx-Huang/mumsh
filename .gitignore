@@ -5,6 +5,5 @@
 mumsh
 mumsh_memory_check
 *.tar
-# test
-driver.c
-in/
+# doc
+img/
