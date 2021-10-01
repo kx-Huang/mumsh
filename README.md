@@ -697,7 +697,7 @@ Once we find some unexpected behaviors which are not defined in our FSM, then we
 
 For reference, the following FSM defines states and state transitions of a simple parser.
 
-![An FSM Parser](img/FSM%20Parser.png)
+![An FSM Parser](https://z3.ax1x.com/2021/10/01/47n26g.png)
 
 You may notice that the pipe mark `|` and backgound jobs indicator `&` are absent in the above FSM. But once we figure this methodology out, it's nothing big deal but adding a few state transitions.
 
@@ -719,6 +719,8 @@ void parser(){
       if (user_input[i] == '\''){
         // do something
       } else if (user_input[i] == '\"'){
+        // do something
+      } else {
         // do something
       }
     } else {
