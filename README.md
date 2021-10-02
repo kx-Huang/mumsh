@@ -290,7 +290,7 @@ Apparently, this should never happen for a shell to run normally. We still need 
 
 ---
 
-#### 3.2.3 What is a `Process` and Why `fork()` before `wxwcvp()`
+#### 3.2.3 What is a `Process` and Why `fork()` before `execvp()`
 
 But before getting into `fork()`, let's first talk about [`process`](https://www.redhat.com/sysadmin/linux-command-basics-7-commands-process-management#:~:text=In%20Linux%2C%20a%20process%20is,you%20have%20created%20a%20process.).
 
@@ -611,12 +611,12 @@ Please think for yourself first and then check whether it matches the following 
 3. Searching for `|` to separate commands in left and right
 4. Searching for `"`,`'` and another quotes close to each other
 
-Unfortunately, if you choose any of the strategy listed above, you might be on a wrong tract.
+Unfortunately, if you choose any of the strategy listed above, you might be on a wrong track.
 
 Our brain indeed works fast on identifying keywords like `<`,`>`,`|` or separating arguments by whitespace in the middle, however, they might have no meaning in a command.
 
 For example,
-- `echo hello ">" 1.out < 1.in` just print `hello > 1.out` on the screen instead of doing redirection
+- `echo hello ">" 1.out < 1.in` just print `hello > 1.out` on the screen instead of doing output redirection
 - `echo "hello' 'world"` only print one argument `hello' 'world` instead of `hello` and `world`
 
 As a result, it doesn't work if we are trying to `match something in the middle` of a command, at least for supporting quotes. And here comes our savior: `Finite State Machine`.
@@ -637,7 +637,7 @@ According to [Google searching results](https://medium.com/@mlbors/what-is-a-fin
 
 From above descriptions, the most important term is `simulate sequential logic`, which means, we start from the leftmost character and read one by one to the rightmost character.
 
-For above command `echo hello ">" 1.out`, please follow the steps:
+For above command `echo hello ">" 1.out < 1.in`, please follow the steps:
 
 1. we read in `e` and we write on paper: we have `e`
 2. we read in `c` and we write on paper: we have `ec`
@@ -652,34 +652,39 @@ But wait, some critical questions comes:
 
 - How do you know the `echo` is the whole string?
 - Can we have `white space` in a command? Perhaps the first command is something like `echo twice`?
+- How do you know the `echo` is the argument?
+- Can `echo` be a redirection filename?
 
-The answer is obvious, we don't meet a quote `'` or `"`.
-
-If I have implemented a built-in command, which is called `echo twice`, then user should input `"echo twice"` in command line instead of `echo twice`.
+The answer is obvious, we haven't meet `'`, `"` and `>`, `>>`, `<` yet. If I have implemented a built-in command, which is called `echo twice`, then user should input `"echo twice"` in command line instead of `echo twice`. If `echo` is `filename`, then we must have meet a `redirector`.
 
 For now, we can conclude some useful knowledge
-- every character including `whitespace` is a meaningful character between quotes
+- every character including `whitespace` is an ordinary character without special meaning between quotes
 - `whitespace` indicate the end of a argument outside of quotes
+- If we don't meet a `redirector`, then the string is an argument.
 
 (The command to parse: `echo hello ">" 1.out < 1.in`)
 
-Back to step 5, our question is solved, `echo` indeed is the first argument. As we keep moving, similarly, we can find `hello` is the second argument.
+Back to step 5, our question is solved, `echo` indeed is the first argument. As we keep moving, similarly, we can find
 
-After that, we read a double quote `"`, with above knowledge, you say:" Aha! I meet a double quote, let's just keep reading every characters until I meet another double quote`"`".
+6. `hello` is the second argument.
 
-As a result, we have our third argument: a single char `>`.
+After that, we read a double quote `"`, with above knowledge, you say:" Aha! I meet a double quote, let's just keep reading every characters until I meet another double quote`"`". As a result, we know
 
-As we keep reading, we find a `<` and you are tring to recall whether we are in between a quotation mark or not. And then you look back:" Aha! Last two quotes are matched! We are outside of quotation marks."
+7. a single char `>` as the third argument
 
-As a result, this `<` is a sign of `input redirection`.
+As we keep moving, since no "true" `redirector` has been meet, we know
 
-According to the grammars, we need a `filename` to perform redirection. So you write on the paper: "I need a `filename`."
+8. `1.out` is the fourth argument
 
-Now, whatever we read in next is a `filename` instead of a `argument`.
+Suddenly, we read in a `<` and you say:" Aha! Last two quotes are matched! We are outside of quotation marks." As a result,
 
-Then, we find `1.in`, and we know it is the `filename` for `input redirection`.
+9. `<` is a sign of `input redirection`.
 
-Finally, we read in `\n`, which is the `newline` inputted by pressing `ENTER` in keyboard, indicating our parsing process comes to an end... or... maybe not?! Consider following cases, what if:
+According to the grammars, we need a `filename` to perform redirection. So you take a note on the paper: "I need a `filename`." Now, whatever we read in next is a `filename` instead of a `argument`. Then, we find `1.in`, and we know
+
+10. `1.in` is a `filename` for `input redirection`.
+
+Finally, we read in `\n`, which is the `newline` inputted by pressing `ENTER` in keyboard, indicating our parsing process comes to an end... or... maybe not?! Consider following cases, what if the command is imcomplete:
 
 - The quotation marks are not closed? e.g. `echo "hello`
 - No `filename` after `<` or `>` outside the quotes? e.g. `echo hello >`
@@ -691,9 +696,7 @@ Or what if... we have a rookie user who is messing up with our input with wrong 
 - Missing program: e.g. `| cat`
 - ......
 
-Actually, the answer to the questions are all hiden in FSM. For FSM, we have different `states` to jump from one another according to the `condition`. Here `condition` is defined by `the character we meet now`, and `states` are defined as `different roles toward a character`.
-
-Once we find some unexpected behaviors which are not defined in our FSM, then we raise an error.
+Actually, the answer to the questions are all hiden in FSM. For FSM, we have different `states` to jump from one another according to the `condition`. Here `condition` is defined by `the character we meet now`, and `states` are defined as `different roles toward a character`. Once we find some `unexpected behaviors` which are not defined in our FSM, then we `raise an error`.
 
 For reference, the following FSM defines states and state transitions of a simple parser.
 
@@ -704,11 +707,9 @@ You may notice that the pipe mark `|` and backgound jobs indicator `&` are absen
 ---
 
 #### 3.5.3 Implement FSM with Code
-Commonly, we can use `while loop` together with `switch case` to `switch states of FSM`.
+Commonly, we can use `while loop` together with `switch case` to `switch states of FSM`. However, for `mumsh`, we use `for loop` with `if else branch` to `switch conditions`. Both of the implementation can serve the needs of a FSM parser.
 
-However, for `mumsh`, we use `for loop` with `if else branch` to `switch conditions`. Both of the implementation can serve the needs of a FSM parser.
-
-(Considering `code reuse`, the source code of `mumsh` is a little bit different from the following main structure.)
+(Considering `code reuse`, the source code of `mumsh` is a little bit different from the following demo structure.)
 
 ```C
 extern char user_input[BUFFER_SIZE];
@@ -717,36 +718,36 @@ void parser(){
   for (size_t i = 0; i < BUFFER_SIZE; i++) {
     if (FSM.in_quotation){
       if (user_input[i] == '\''){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '\"'){
-        // do something
+        // do something and switch state
       } else {
-        // do something
+        // do something and switch state
       }
     } else {
       if (user_input[i] == ' '){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '<'){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '>'){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '|'){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '\''){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '\"'){
-        // do something
+        // do something and switch state
       } else if (user_input[i] == '&'){
-        // do something
+        // do something and switch state
       } else {
-        // do something
+        // do something and switch state
       }
     }
   }
 }
 ```
 
-In `mumsh`, we keep the state-related information in a `parser struct`, which is used `locally` in parser:
+In `mumsh`, we keep the state and condition information in a `parser struct`, which is used as a `local variable` in `parser()`:
 ```C
 typedef struct parser {
   size_t buffer_len; // char buffer length
@@ -759,7 +760,7 @@ typedef struct parser {
 } parser_t;
 ```
 
-In `mumsh`, we save the command-related data in a `cmd struct`, which is used `external-globally` in various functions:
+In `mumsh`, we save the command-related information in a `cmd struct`, which is used as an `external global variable` in various such as `execute_cmds()` and `check_cmd_xx()` :
 ```C
 typedef struct token {
   size_t argc; // argument count
