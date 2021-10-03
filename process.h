@@ -27,14 +27,14 @@ typedef struct job {
 
 void sigint_handler();
 void reap_background_jobs();
+void mumsh_exec_cmds();
+int mumsh_cmd_exit();
+int mumsh_cmd_cd();
 void init_jobs_table();
 int add_bytes();
 void print_formatted_cmds();
 void input_redirect();
 void output_redirect();
-void mumsh_exec_cmds();
-int mumsh_cmd_exit();
-int mumsh_cmd_cd();
 void mumsh_cmd_jobs(token_t* token);
 void mumsh_cmd_pwd(token_t* token);
 void exec_cmd(token_t* token);

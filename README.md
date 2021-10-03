@@ -226,7 +226,8 @@ However, some contents such as detailed data structure and marginal logic will b
 ### 3.1 Main Read/Parse/Execute Loop
 As we all know, a shell is a computer program which exposes an operating system's services to a human user or other program. It repeatedly takes commands from the keyboard, gives them to the operating system to perform and deliver corresponding output.
 
-As a result, the first step for us is to have a main loop, repeatedly doing 3 things:
+As a result, the first step for us is to have a main loop, repeatedly doing 4 things:
+  1. prompt `mumsh $ `
   1. read user input
   2. parse input into commands
   3. execute the commands
@@ -234,6 +235,7 @@ As a result, the first step for us is to have a main loop, repeatedly doing 3 th
 ```C
  int main(){
    while(1){
+     printf("mumsh $ ");
      read_user_input();
      parser(); // let's call it parser, who parses user input into commands
      execute_cmds();
@@ -253,6 +255,7 @@ void check_cmd_exit(){
 
 int main(){
   while(1){
+    printf("mumsh $ ");
     read_user_input();
     parser();
     check_cmd_exit(); // if user input "exit", exit here
@@ -780,3 +783,5 @@ typedef struct cmd {
 
 extern cmd_t cmd;
 ```
+
+### 3.6 
