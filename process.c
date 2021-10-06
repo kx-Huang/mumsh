@@ -184,7 +184,7 @@ void print_formatted_cmds() {
   job.cmd_table[job.job_cnt] = buffer;
 }
 
-// execute cmd sequence
+// execute command sequence
 void mumsh_exec_cmds() {
   // print background cmds
   if (cmd.background) {
@@ -192,6 +192,7 @@ void mumsh_exec_cmds() {
     printf("[%lu] ", job.job_cnt + 1);
     print_formatted_cmds();
   }
+  // execute command sequence
   for (size_t i = 0; i < cmd.cnt; i++) {
     // open new pipe
     if (cmd.cnt > 1 && i != cmd.cnt - 1)
