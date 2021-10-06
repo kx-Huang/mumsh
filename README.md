@@ -200,7 +200,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ### 2.8 Background Jobs
 - If `&` is added at the end of user input, `mumsh` will run jobs in background instead of waiting for execution to be done.
 - Command `jobs` can keep track on every background jobs, no matter a job is `done` or `running`
-- `mumsh` support pipe in background jobs
+- `mumsh` support `pipe` in background jobs
 
   ```sh
   mumsh $ sleep 10 &
@@ -210,6 +210,16 @@ Now, we have our components of input to play with, and we can try it out in `mum
   mumsh $ jobs
   [1] running sleep 10 &
   [2] done sleep 1 | sleep 1 | sleep 1 &
+  mumsh $
+  ```
+
+- `mumsh` support command formatting
+
+  ```sh
+  mumsh $  sl"eep"  1|"echo"  "he"llo>1.txt  world&
+  [1] sleep 1 | echo hello world > 1.txt &
+  mumsh $ jobs
+  [1] done sleep 1 | echo hello world > 1.txt &
   mumsh $
   ```
 

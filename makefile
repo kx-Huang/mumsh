@@ -14,7 +14,7 @@ JOJ_M2_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b5000
 JOJ_M3 = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144d54e7677b50009adb617
 JOJ_M3_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144d5647677b50009adb618
 
-TAR_NAME = p1_m1.tar
+TAR_NAME = p1.tar
 .PHONY: clean
 
 all: $(MUMSH) $(MUMSHMC)
