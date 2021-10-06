@@ -216,10 +216,10 @@ Now, we have our components of input to play with, and we can try it out in `mum
 - `mumsh` support command formatting
 
   ```sh
-  mumsh $  sl"eep"  1|"echo"  "he"llo>1.txt  world&
-  [1] sleep 1 | echo hello world > 1.txt &
+  mumsh $ <'i'n   c"a"t|   cat   |ech'o'  "he"llo>out  world!&
+  [1] cat < in | cat | echo hello world! > out &
   mumsh $ jobs
-  [1] done sleep 1 | echo hello world > 1.txt &
+  [1] done cat < in | cat | echo hello world! > out &
   mumsh $
   ```
 
