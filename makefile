@@ -10,7 +10,7 @@ MUMSHMC_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined 
 JOJ_M1 = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6141859a623b5b000610bc9d
 JOJ_M1_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/61418609623b5b000610bca3
 JOJ_M2 = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144c9007677b50009adb5d7
-JOJ_M2_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144c9137677b50009adb5d8
+JOJ_M2_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df247677b50009adb634/6144c9137677b50009adb5d8
 JOJ_M3 = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144d54e7677b50009adb617
 JOJ_M3_MC = https://joj.sjtu.edu.cn/d/ve482_fall_2021/homework/6144df8f7677b50009adb635/6144d5647677b50009adb618
 

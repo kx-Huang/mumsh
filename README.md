@@ -255,7 +255,7 @@ As a result, the first step for us is to have a main loop, repeatedly doing 4 th
 
 Now we have the basic structure of a shell, but you may notice that it runs forever. As a result, we need a exit-checking funtion in the main loop. If users want to exit the shell, they can just input the command `exit` and that's it, our shell just exit.
 
-Assume we've already parsed user input into command `cmd` (we will talk about how to do implement simple parser with `Finite State Machine`in [section 3.5](#35-simple-parsing-with-finite-state-machine)), we have
+Assume we've already parsed user input into command `cmd` (we will talk about how to do implement simple parser with `Finite State Machine`in [Section 3.5](#35-simple-parsing-with-finite-state-machine)), we have
 
 
 ```C
@@ -568,7 +568,7 @@ To make us a good parent, `waitpid()` system call is needed.
 
 #### 3.4.3 Reaping Child Process Blockingly
 
-Following the document, with `waitpid` system call, we now can construct the complete `fork-execute-wait structure`.
+Following the document, with `waitpid` system call and `WUNTRACED` argument, we now can construct the complete `fork-execute-wait structure`.
 
 ```C
 void execute_cmds(){
@@ -586,9 +586,26 @@ Tips: command `sleep` is useful to observe blocking. Try `sleep 5` for sleeping 
 
 ---
 
+#### 3.4.4 Reaping Child Process Unblockingly
+
+Similarly, with `waitpid` system call and `WNOHANG` argument, if a child died, its pid will be returned, and if nothing died, then 0 will be returned. In both case, `waitpid` will run and return immediately instead of waiting blockingly.
+
+In `mumsh`, `mumsh` will try to reap all background processes within function `reap_background_jobs()` once users trigger a next input by pressing `ENTER` or interrupt with `CTRL-C`. For more details regarding background jobs handling, please refer to [Section 3.6](#36-background-jobs-handling). The sample code is given as followed:
+
+```C
+void reap_background_jobs(){
+  // try to reap all background processes no matter running or done
+  for (size_t i = 0; i < background_jobs_count; i++){
+    waitpid(-1, NULL, WNOHANG); // reap only dead child process
+  }
+}
+```
+
+---
+
 ### 3.5 Simple Parser via Finite State machine
 
-In [section 3.2](#32-execute-a-command-fork-and-execvp-system-calls), we assumed that we already parsed user input into command `cmd` and execute. Now, it's time for us to implement a parser for real!
+In [Section 3.2](#32-execute-a-command-fork-and-execvp-system-calls), we assumed that we already parsed user input into command `cmd` and execute. Now, it's time for us to implement a parser for real!
 
 (If you are currently a VE482 student, I suggest you to start early on milestone 1 and put more attentions on parser. Without a properly-organized parser, you would suffer a lot from refactoring your code in the future milestones)
 
@@ -596,7 +613,7 @@ In [section 3.2](#32-execute-a-command-fork-and-execvp-system-calls), we assumed
 
 #### 3.5.0 A Simple Test for Brain-parsing Commands
 
-The command formats are mentioned in [section 2.1](#21-overall-mumsh-grammar-in-backus-naur-form), please check first if you are not familar with the concept.
+The command formats are mentioned in [Section 2.1](#21-overall-mumsh-grammar-in-backus-naur-form), please check first if you are not familar with the concept.
 
 **Task**:
 1. Given a `simple command` below, please describe in what ways our brain is parsing the commands
@@ -668,7 +685,7 @@ But wait, some critical questions comes:
 - How do you know the `echo` is the argument?
 - Can `echo` be a redirection filename?
 
-The answer is obvious, we haven't meet `'`, `"` and `>`, `>>`, `<` yet. If I have implemented a built-in command, which is called `echo twice`, then user should input `"echo twice"` in command line instead of `echo twice`. If `echo` is `filename`, then we must have meet a `redirector`.
+The answer is obvious, we haven't meet `'`, `"` and `>`, `>>`, `<` yet. If I have implemented a built-in command, which is called `echo twice`, then user should input `"echo twice"` in command line instead of `echo twice`, otherwise, `twice` will be treated as `argument` and `echo` will be treat as `command`. If `echo` is `filename`, then we must have meet a `redirector`.
 
 For now, we can conclude some useful knowledge
 - every character including `whitespace` is an ordinary character without special meaning between quotes
@@ -711,11 +728,11 @@ Or what if... we have a rookie user who is messing up with our input with wrong 
 
 Actually, the answer to the questions are all hiden in FSM. For FSM, we have different `states` to jump from one another according to the `condition`. Here `condition` is defined by `the character we meet now`, and `states` are defined as `different roles toward a character`. Once we find some `unexpected behaviors` which are not defined in our FSM, then we `raise an error`.
 
-For reference, the following FSM defines states and state transitions of a simple parser.
+For reference, the following FSM defines states and state transitions of a simple strong parser.
 
 ![An FSM Parser](https://z3.ax1x.com/2021/10/01/47n26g.png)
 
-You may notice that the pipe mark `|` and backgound jobs indicator `&` are absent in the above FSM. But once we figure this methodology out, it's nothing big deal but adding a few state transitions.
+You may notice that the pipe mark `|` and background jobs indicator `&` are absent in the above FSM. But once we figure this methodology out, it's nothing big deal but adding a few state transitions.
 
 ---
 
@@ -763,12 +780,12 @@ void parser(){
 In `mumsh`, we keep the state and condition information in a `parser struct`, which is used as a `local variable` in `parser()`:
 ```C
 typedef struct parser {
-  size_t buffer_len; // char buffer length
-  int is_src; // input redirection state
-  int is_dest; // output redirection state
-  int is_pipe; // in pipe condition indicator
-  int in_single_quote; // in single quote condition indicator
-  int in_double_quote; // in double quote condition indicator
+  size_t buffer_len;        // char buffer length
+  int is_src;               // input redirection state
+  int is_dest;              // output redirection state
+  int is_pipe;              // in pipe condition indicator
+  int in_single_quote;      // in single quote condition indicator
+  int in_double_quote;      // in double quote condition indicator
   char buffer[BUFFER_SIZE]; // char buffer
 } parser_t;
 ```
@@ -776,22 +793,82 @@ typedef struct parser {
 In `mumsh`, we save the command-related information in a `cmd struct`, which is used as an `external global variable` in various such as `execute_cmds()` and `check_cmd_xx()` :
 ```C
 typedef struct token {
-  size_t argc; // argument count
-  char* argv[TOKEN_SIZE]; // argument list
+  size_t argc;                // argument count
+  char* argv[TOKEN_SIZE];     // argument list
 } token_t;
 
 typedef struct cmd {
-  size_t cnt; // command count
-  int background; // background job indicator
-  int read_file; // input redirection indicator
-  int write_file; // output redirection indicator
-  int append_file; // append mode indicator
-  char src[BUFFER_SIZE]; // input redirection filename
-  char dest[BUFFER_SIZE]; // output redirection filename
+  size_t cnt;                 // command count
+  int background;             // background job indicator
+  int read_file;              // input redirection indicator
+  int write_file;             // output redirection indicator
+  int append_file;            // append mode indicator
+  char src[BUFFER_SIZE];      // input redirection filename
+  char dest[BUFFER_SIZE];     // output redirection filename
   token_t cmds[COMMAND_SIZE]; // command list
 } cmd_t;
 
 extern cmd_t cmd;
 ```
 
-### 3.6 
+### 3.6 Background Jobs Handling
+In [Section 3.4.4](#344-reaping-child-process-unblockingly), we briefly talk about the mechanism of reaping background process, which is trying to reap all background processes within function `reap_background_jobs()` once users trigger a next input by pressing `ENTER` or interrupt with `CTRL-C`.
+
+To implement built-in command `jobs`, we have to design a more reasonable data structure to
+- store the input commands ended with `&`
+- store whether a background process is running or done
+
+Also, this data structure should be flexible in size, because in this project, all the previous background jobs status should be printed out by `jobs` command. And here comes our `job table`, implemented by `struct job`, which type name is `job_t`.
+
+```C
+#define JOBS_CAPACITY 1024 // job table capacity
+
+typedef struct job {
+  size_t bg_cnt;      // number of processes running in background
+  size_t job_cnt;     // number of all background processes
+  size_t table_size;  // size of job table
+  size_t* stat_table; // status of a background command
+  pid_t** pid_table;  // table of all background process ID
+  char** cmd_table;   // table of all formatted background command
+} job_t;
+```
+
+For example, in the following cases,
+
+```sh
+mumsh $ sleep 10 | sleep 10 &
+[1] sleep 10 | sleep 10 &
+mumsh $ sleep 1 &
+[2] sleep 1 &
+mumsh $ jobs
+[1] running sleep 10 | sleep 10 &
+[2] done sleep 1 &
+```
+
+- `bg_cnt = 3`
+- `job_cnt = 4`
+- `table_size = 2`
+- `stat_table`
+
+  | index |   status  |
+  |:-----:|:---------:|
+  |  [1]  | `running` |
+  |  [2]  |   `done`  |
+
+- `pid_table`
+
+  | index |   pid   |   pid   |
+  |:-----:|:-------:|:-------:|
+  |  [1]  | `88100` | `88101` |
+  |  [2]  | `88102` |         |
+
+- `cmd_table`
+
+  | Index |          Command         |
+  |:-----:|:------------------------:|
+  |  [1]  | `sleep 10 \| sleep 10 &` |
+  |  [2]  |        `sleep 1 &`       |
+
+With this `job table` data structure, we can easily handle the background jobs.
+
+### 3.7 Redirection and Pipe: `dup2()` and `pipe()` System Call
