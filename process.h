@@ -44,10 +44,6 @@ void exit_process(int exit_code, char* content);
 extern sigjmp_buf env;
 extern volatile sig_atomic_t jump_active;
 
-job_t job;
-char OLDPWD[BUFFER_SIZE];
-int pipe_fd[PROCESS_SIZE][2];
-
 void debug_process(pid_t pid, int status);
 void debug_jobs();
 

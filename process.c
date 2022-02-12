@@ -292,7 +292,7 @@ void debug_process(pid_t pid, int status) {
 
 // print jobs log
 void debug_jobs() {
-  // printf("jobs table capacity: %lu\n", job.table_size);
+  printf("jobs table capacity: %lu\n", job.table_size);
   for (size_t i = 0; i < job.job_cnt; i++)
     for (size_t j = 0; job.pid_table[i][j] != 0; j++)
       printf("job[%lu][%lu]: %d\n", i, j, job.pid_table[i][j]);

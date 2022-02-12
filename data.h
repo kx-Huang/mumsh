@@ -6,6 +6,8 @@
 #define COMMAND_SIZE 512
 #define PROCESS_SIZE 512
 
+#include <stdio.h>
+
 enum error_type {
   NORMAL = 0,
   NON_EXISTING_PROGRAM = 1,
@@ -21,7 +23,7 @@ enum error_type {
 
 typedef struct token {
   size_t argc;
-  char* argv[TOKEN_SIZE];
+  char *argv[TOKEN_SIZE];
 } token_t;
 
 typedef struct cmd {
@@ -44,6 +46,8 @@ typedef struct parser {
   int in_double_quote;
   char buffer[BUFFER_SIZE];
 } parser_t;
+
+void debug_path(int from_home, size_t depth, char *token[TOKEN_SIZE]);
 
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;

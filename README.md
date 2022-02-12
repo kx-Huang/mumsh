@@ -1,27 +1,38 @@
-# Mumsh: VE482 Operating System Project 1
-This project is a course project in `VE482 Operating System` at [`UM-SJTU Joint Institute`](https://www.ji.sjtu.edu.cn/).
+<div align="center">
+
+# A C-based Mini Shell: `mumsh`
+
+</div>
+
+![memsh demo](img/mumsh_demo.png)
+
+# Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
+
+This project is a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
 
 In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including
+
 - Read/parse/execute loop
 - Incomplete input waiting
 - Syntax error handling
 - Quotes parsing
-- Internal commands `exit`/`pwd`/`cd`/`jobs`,
+- Internal commands `exit`/`pwd`/`cd`/`jobs`
 - I/O redirection under bash style syntax
-- Arbitrarily-deep pipes in parallel
-- `CTRL-C`/`CTRL-D` interrupt
-- Background jobs running.
+- Arbitrarily-deep pipes running in parallel
+- `CTRL-C`/`CTRL-D` interruption
+- Background jobs
 
 In this `README`, the following content will be included:
 
-1.  Files related to this project
-2.  How to build and run `mumsh`
-3.  How to play with `mumsh`
-4.  How `mumsh` is constructed
+0.  [What files are related to `mumsh`](#0-files-related-to-mumsh)
+1.  [How to build and run `mumsh`](#1-build-and-run-mumsh)
+2.  [How to play with `mumsh`](#2-play-with-mumsh)
+3.  [How to implement `mumsh`](#3-implement-mumsh-step-by-step)
 
-----
-## 0. Files related to project `mumsh`
+## 0. Files related to `mumsh`
+
 We have 4 kinds of files in this project:
+
 - README
   - It's strongly adviced to read `README.md` before running `mumsh` or reading source code, since it may give us more sense of what `mumsh` is doing in each stage.
 - C Source files: (in executing order)
@@ -33,20 +44,17 @@ We have 4 kinds of files in this project:
   - `mumsh.h`
   - `io.h`
   - `parser.h`
-  - `process.h`: store global varbles for jobs only regarding process
-  - `data.h`: store extern global varibles for read/parse/execute loop
+  - `process.h`: store global variables regarding process
+  - `data.h`: store extern global variables regarding read/parse/execute loop
 - makefile
   - used for quick build and clean of executable file
 
----
-
 ## 1. Build and Run `mumsh`
+
 - build: `$ make`
 - run: `$ ./mumsh`
 
 If everything is normal, we can see in the terminal `mumsh $ `, which indicates that `mumsh` is up and running, waiting for our input.
-
----
 
 ## 2. Play with `mumsh`
 
@@ -57,29 +65,34 @@ Of course, `mumsh` is only a product of a course project supporting basic functi
 ---
 
 ### 2.1 Overall `mumsh` Grammar in Backus-­Naur Form
-``` sh
+
+```shell
 cmd [argv]* [| cmd [argv]* ]* [[> filename][< filename][>> filename]]* [&]
 ```
 
 Seems abstract and mayebe get a little bit confused? Let me explain a little more. For more details, please check the following sections.
 
 The input of `mumsh` can be made up of 4 components:
+
 - command and argument: `cmd`, `argv`
 - redirector and filename: `<`, `>`, `>>`, `filename`
 - pipe indicator: `|`
 - background job indicator: `&`
 
 #### 2.1.1 Command and Argument
+
 - `cmd` is a must, or `mumsh` will raise `error: missing program`
 - `argv` is optional, we can choose to call a command with arguments or not.
 
 #### 2.1.2 Redirector and Filename
+
 - `<`, `>`, `>>` is optional, but we should input redirector along with filename
   - if any `<, >, |, &` instead of `filename` follows, `mumsh` will raise `error: syntax error near unexpected token ...`
   - if no character follows, `mumsh` will prompt us to keep input in newline
 - `>` and `>>` can't exist in the same command, or `mumsh` will raise `error: duplicated output redirection`
 
 #### 2.1.3 Pipe Indicator
+
 - `|` is optional, but we should input `|` after one command and followed by another command
   - if no command before `|`, `mumsh` will raise `error: missing program`
   - if no character after `|`, `mumsh` will prompt us to keep input in newline
@@ -88,6 +101,7 @@ The input of `mumsh` can be made up of 4 components:
   - if `<` comes after `|`, `mumsh` will raise `error: duplicated input redirection`
 
 #### 2.1.4 Background Job Indicator
+
 - `&` is optional, but we should only input `&` at the end of input, or `mumsh` will ignore the character(s) after `&` is detected.
 
 Now, we have our components of input to play with, and we can try it out in `mumsh` by assembling them into a whole input. As long as `mumsh` doesn't raise an error, our input syntax is valid, even though this input may give no output.
@@ -95,6 +109,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.2 Simple Commands
+
 - `mumsh` built-in commands
   - `exit`: exit `mumsh`
   - `pwd`: print working directory
@@ -108,10 +123,13 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.3 I/0 Redirection (support bash style syntax)
+
 - Input redirection
+
   - `< filename`: read from file named `filename`, or raise error if no `filename` exists
 
 - Output redirection
+
   - `> filename`: overwrite if file named `filename` exists or create new file named `filename`
   - `>> filename`: append if file named `filename` exists or create new file named `filename`
 
@@ -123,6 +141,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.4 Pipe
+
 - takes output of one command as input of another command
   - basic pipe syntax: `echo 123 | grep 1`
 - `mumsh` support parallel execution: all piped commands run in parallel
@@ -133,18 +152,20 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.5 CTRL-C
+
 - interrupt all executing commands in foreground with `CTRL-C`
 - cases:
+
   - clear user input and prompt new line
 
-    ```sh
+    ```shell
     mumsh $ echo ^C
     mumsh $
     ```
 
   - interrupt single executing command
 
-    ```sh
+    ```shell
     mumsh $ sleep 10
     ^C
     mumsh $
@@ -152,7 +173,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 
   - interrupt multiple executing commands
 
-    ```sh
+    ```shell
     mumsh $ sleep 10 | sleep 10 | sleep 10
     ^C
     mumsh $
@@ -160,7 +181,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 
   - CTRL-C don't interrupt background jobs
 
-    ```sh
+    ```shell
     mumsh $ sleep 10 &
     [1] sleep 10 &
     mumsh $ ^C
@@ -172,24 +193,27 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.6 CTRL-D
+
 - if `mumsh` has no user input, `CTRL-D` will exit `mumsh`
 
-  ```sh
+  ```shell
   mumsh $ exit
   $
   ```
+
 - if `mumsh` has user input, do nothing
 
-  ```sh
+  ```shell
   mumsh $ echo ^D
   ```
 
 ---
 
 ### 2.7 Quotes
+
 - `mumsh` takes any character between `"` or `'` as ordinary character without special meaning.
 
-  ```sh
+  ```shell
   mumsh $ echo hello "| grep 'h' > 1.txt"
   hello | grep 'h' > 1.txt
   mumsh $
@@ -198,11 +222,12 @@ Now, we have our components of input to play with, and we can try it out in `mum
 ---
 
 ### 2.8 Background Jobs
+
 - If `&` is added at the end of user input, `mumsh` will run jobs in background instead of waiting for execution to be done.
 - Command `jobs` can keep track on every background jobs, no matter a job is `done` or `running`
 - `mumsh` support `pipe` in background jobs
 
-  ```sh
+  ```shell
   mumsh $ sleep 10 &
   [1] sleep 10 &
   mumsh $ sleep 1 | sleep 1 | sleep 1 &
@@ -215,7 +240,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
 
 - `mumsh` support command formatting
 
-  ```sh
+  ```shell
   mumsh $ <'i'n   c"a"t|   cat   |ech'o'  "he"llo>out  world!&
   [1] cat < in | cat | echo hello world! > out &
   mumsh $ jobs
@@ -223,9 +248,7 @@ Now, we have our components of input to play with, and we can try it out in `mum
   mumsh $
   ```
 
----
-
-## 3. Construct `mumsh` Step by Step
+## 3. Implement `mumsh` Step by Step
 
 In this section, we will go through the construction of `mumsh` step by step, giving us a general concept of how this shell work. This section is intended for helping **beginners** (just as me a week ago) grab some basic concept for implementing a shell.
 
@@ -234,15 +257,17 @@ However, some contents such as detailed data structure and marginal logic will b
 ---
 
 ### 3.1 Main Read/Parse/Execute Loop
+
 As we all know, a shell is a computer program which exposes an operating system's services to a human user or other program. It repeatedly takes commands from the keyboard, gives them to the operating system to perform and deliver corresponding output.
 
 As a result, the first step for us is to have a main loop, repeatedly doing 4 things:
-  1. prompt `mumsh $ `
-  1. read user input
-  2. parse input into commands
-  3. execute the commands
 
-```C
+1. prompt `mumsh $ `
+2. read user input
+3. parse input into commands
+4. execute the commands
+
+```c
  int main(){
    while(1){
      printf("mumsh $ ");
@@ -255,10 +280,9 @@ As a result, the first step for us is to have a main loop, repeatedly doing 4 th
 
 Now we have the basic structure of a shell, but you may notice that it runs forever. As a result, we need a exit-checking funtion in the main loop. If users want to exit the shell, they can just input the command `exit` and that's it, our shell just exit.
 
-Assume we've already parsed user input into command `cmd` (we will talk about how to do implement simple parser with `Finite State Machine`in [Section 3.5](#35-simple-parsing-with-finite-state-machine)), we have
+Assume we've already parsed user input into command `cmd` (we will talk about how to do implement simple parser with `Finite State Machine`in [Section 3.5](#35-simple-parser-via-finite-state-machine), we have
 
-
-```C
+```c
 void check_cmd_exit(){
    if (strcmp(cmd, "exit") == 0) exit(0);
 }
@@ -275,6 +299,7 @@ int main(){
 ```
 
 ### 3.1.1 A Question Remains
+
 You may argue that this exit-checking funtion can be in the part of `execute_cmds()`. Of course we can do that, but personally I perfer put it in the main loop. And the reason for this is exactly what makes **the most important** part: how is a command executed in the shell?
 
 ---
@@ -314,25 +339,29 @@ Aforementioned `execvp()` system call just replace one program with another in a
 The `fork()` system call "creates a new process by duplicating the calling process. The new process is referred to as the `child process`. The calling process is referred to as the `parent process`." In this case, if we execute `/bin/ls` in child process, our `mumsh` process won't vanish.
 
 Now, we have everything prepared:
+
 1. use `fork()` system call to create a child process
 2. use `execvp()` system call to execute the program in child process
 
 For more detailed documentations, we can check [`Linux manual page`](https://man7.org/linux/man-pages/man1/man.1.html).
 
 ---
+
 ##### 3.2.3.1 Reference: `fork()` System Call
+
 > [`fork()`](https://man7.org/linux/man-pages/man2/fork.2.html) - create a child process
 >
 > **Description**
 >
 > - creates a new process by duplicating the calling process
 >
-> ```C
+> ```c
 >   #include <unistd.h>
 >   pid_t fork(void);
 > ```
 >
 > **Return value**
+>
 > - On success
 >   - the `PID` of the child process is returned in the parent
 >   - `0` is returned in the child
@@ -342,22 +371,25 @@ For more detailed documentations, we can check [`Linux manual page`](https://man
 >   - `errno` is set to indicate the error
 
 ---
+
 ##### 3.2.3.2 Reference: `execvp()` System Call
+
 > [`execvp`](https://man7.org/linux/man-pages/man3/exec.3.html) - execute a filename
 >
 > **Description**
 >
 > - replaces the current process image with a new process image
 >
-> ```C
+> ```c
 >   #include <unistd.h>
 >   int execvp(const char *file, char *const argv[]);
 > ```
 >
 > **Arguments**
+>
 > - `file`: pointer point to the filename associated with the file being executed
 > - `argv`: an array of pointers to null-terminated strings that represent the argument list available to the new program
-> **Return value**
+>   **Return value**
 > - On success: no return
 > - On failure
 >   - return `-1` if an error has occurred
@@ -369,7 +401,7 @@ For more detailed documentations, we can check [`Linux manual page`](https://man
 
 Following the documents, we now can construct the basic `fork and execute structure`.
 
-```C
+```c
 void execute_cmds(){
   pid_t pid = fork(); // fork() system call
   // child and parent process reach here
@@ -384,6 +416,7 @@ void execute_cmds(){
 ```
 
 You may ask why the child process can't procceed after `execvp()`, and that's because `execvp()` system call have a unique feature: it never return if no error occurs. Basically, it
+
 - replace the program of caller (duplicated instance `mumsh`) on child process created by `fork()` with any program we call
 - the program we call is up and running in that child process
 - the child process terminated as the program finishes its execution
@@ -393,9 +426,10 @@ Now that the child process is gone, of course child process will never run the c
 ---
 
 ### 3.3 Built-in Commands
+
 Still remember there's [a question left in 3.1.1](#311-a-question-remains)? Why do I put `check_cmd_exit()` outside of `execute_cmds()` in main loop? That's because `exit` is a `built-in command`.
 
-```C
+```c
 void check_cmd_exit(){
   if (strcmp(cmd, "exit") == 0) {
     exit(0); // exit the parent process
@@ -418,7 +452,7 @@ Obviously, `exit` should happen in parent process, because we want to exit `mums
 
 Similarly, we can implement command `cd` (change working directory) as `built-in command` in parent process. If we accidentally run `cd` in child process, we change working directory for child `mumsh` instead of parent `mumsh`. In that case, nothing changes after child process is exited.
 
-```C
+```c
 void check_cmd_cd(){
   if (strcmp(cmd, "cd") == 0) {
     chdir(argv); // chdir() system call
@@ -439,10 +473,11 @@ int main(){
 To be clear, `built-in commands` are not equal or related to `commands run in parent process`, they are totally separate things. Here `built-in commands` are just oppsite to `commands that call other programs`.
 
 For example, We can still make our `built-in` commands like `pwd` running in child process, and it has 2 advantages:
+
 - firstly `pwd` doesn't tamper with parent process: it just print something and that's it. Putting it in child process doesn't change its output.
 - and secondly, if `pwd` runs in the child process, we can do more fancy operations such as making it parts of a `pipe` or making it a `background job`.
 
-```C
+```c
 void check_cmd_pwd(){
   if (strcmp(cmd, "pwd") == 0) {
     getcwd(buffer, BUFFER_SIZE); // getcwd() system call
@@ -462,7 +497,7 @@ void execute_cmds(){
 
 Until now, the basic structure of `mumsh` has been constructed.
 
-```C
+```c
 void check_cmd_cd(){
   if (strcmp(cmd, "cd") == 0) {
     chdir(argv); // chdir() system call
@@ -513,14 +548,16 @@ However, there's one more thing to do after we create a child process and run a 
 #### 3.4.1 A Simple Metaphor
 
 To be a qualified parent in real world, we should take care of our children. Let's say we have a child playing badminton on the field, we as parent, have simply 3 choices:
+
 1. do nothing and wait for the child until he is done
 2. do our own stuff and pick the child up after he is done
 3. do our own stuff and leave the child alone forever
 
 In this metaphor, the child is `a child process`, the parent is `mumsh parent process`, and playing badminton is `execution of a program`. The 3 choices are correspondingly:
+
 1. parent process is `blocked` to `wait` the child process to `exit`
 2. parent process is `unblocked` and `wait` the child process to `exit` sometime in future
-3. parent process is `unblocked` and don't give a sh*t about the status of child process
+3. parent process is `unblocked` and don't give a sh\*t about the status of child process
 
 Apparently, our `mumsh` is a caring parent, so we should choose option 1 or 2.
 
@@ -529,6 +566,7 @@ In both options, we say the child process is `reaped` by the parent process, and
 To make us a good parent, `waitpid()` system call is needed.
 
 ---
+
 #### 3.4.2 Reference: `waitpid()` System Call
 
 > [`waitpid()`](https://man7.org/linux/man-pages/man2/wait.2.html) - wait for process to change state
@@ -537,12 +575,13 @@ To make us a good parent, `waitpid()` system call is needed.
 >
 > - Suspends execution of the calling thread until a child specified by pid argument has changed state
 >
-> ```C
+> ```c
 >   #include <sys/wait.h>
 >   pid_t waitpid(pid_t pid, int *wstatus, int options);
 > ```
 >
 > **Arguments**
+>
 > - `pid`
 >   - `> 0`: wait for the child whose `process ID` is equal to the value of `pid`
 >   - `0`: wait for any child process whose `process group ID` is equal to that of the calling process at the time of the call to `waitpid()`
@@ -556,6 +595,7 @@ To make us a good parent, `waitpid()` system call is needed.
 >   - `...`
 >
 > **Return value**
+>
 > - On success
 >   - the `PID` of the child process is returned in the parent
 >   - `0` is returned in the child
@@ -570,7 +610,7 @@ To make us a good parent, `waitpid()` system call is needed.
 
 Following the document, with `waitpid` system call and `WUNTRACED` argument, we now can construct the complete `fork-execute-wait structure`.
 
-```C
+```c
 void execute_cmds(){
   pid_t pid = fork(); // fork() system call
   if (pid == 0) { // child process
@@ -592,7 +632,7 @@ Similarly, with `waitpid` system call and `WNOHANG` argument, if a child died, i
 
 In `mumsh`, `mumsh` will try to reap all background processes within function `reap_background_jobs()` once users trigger a next input by pressing `ENTER` or interrupt with `CTRL-C`. For more details regarding background jobs handling, please refer to [Section 3.6](#36-background-jobs-handling). The sample code is given as followed:
 
-```C
+```c
 void reap_background_jobs(){
   // try to reap all background processes no matter running or done
   for (size_t i = 0; i < background_jobs_count; i++){
@@ -616,23 +656,24 @@ In [Section 3.2](#32-execute-a-command-fork-and-execvp-system-calls), we assumed
 The command formats are mentioned in [Section 2.1](#21-overall-mumsh-grammar-in-backus-naur-form), please check first if you are not familar with the concept.
 
 **Task**:
+
 1. Given a `simple command` below, please describe in what ways our brain is parsing the commands
 
-    ```sh
-    echo hello < 1.in world > 1.out &
-    ```
+   ```shell
+   echo hello < 1.in world > 1.out &
+   ```
 
 2. Given a `cascade command` below, please describe in what ways your brain is parsing
 
-    ```sh
-    echo hello world | cat | cat | cat | grep hello
-    ```
+   ```shell
+   echo hello world | cat | cat | cat | grep hello
+   ```
 
 3. Given a `complicated command` below, please describe in what ways our brain is parsing
 
-    ```sh
-    "echo" hello'  <  "'world'"  |  'cat  >  '3.out'
-    ```
+   ```shell
+   "echo" hello'  <  "'world'"  |  'cat  >  '3.out'
+   ```
 
 Please think for yourself first and then check whether it matches the following strategies:
 
@@ -646,6 +687,7 @@ Unfortunately, if you choose any of the strategy listed above, you might be on a
 Our brain indeed works fast on identifying keywords like `<`,`>`,`|` or separating arguments by whitespace in the middle, however, they might have no meaning in a command.
 
 For example,
+
 - `echo hello ">" 1.out < 1.in` just print `hello > 1.out` on the screen instead of doing output redirection
 - `echo "hello' 'world"` only print one argument `hello' 'world` instead of `hello` and `world`
 
@@ -688,6 +730,7 @@ But wait, some critical questions comes:
 The answer is obvious, we haven't meet `'`, `"` and `>`, `>>`, `<` yet. If I have implemented a built-in command, which is called `echo twice`, then user should input `"echo twice"` in command line instead of `echo twice`, otherwise, `twice` will be treated as `argument` and `echo` will be treat as `command`. If `echo` is `filename`, then we must have meet a `redirector`.
 
 For now, we can conclude some useful knowledge
+
 - every character including `whitespace` is an ordinary character without special meaning between quotes
 - `whitespace` indicate the end of a argument outside of quotes
 - If we don't meet a `redirector`, then the string is an argument.
@@ -721,6 +764,7 @@ Finally, we read in `\n`, which is the `newline` inputted by pressing `ENTER` in
 - No `argument` after `|` outside the quotes? e.g. `echo hello |`
 
 Or what if... we have a rookie user who is messing up with our input with wrong grammar:
+
 - Syntax error: e.g. `echo > <`
 - Duplicated output direction: e.g. `echo > out | cat`
 - Missing program: e.g. `| cat`
@@ -737,11 +781,12 @@ You may notice that the pipe mark `|` and background jobs indicator `&` are abse
 ---
 
 #### 3.5.3 Implement FSM with Code
+
 Commonly, we can use `while loop` together with `switch case` to `switch states of FSM`. However, for `mumsh`, we use `for loop` with `if else branch` to `switch conditions`. Both of the implementation can serve the needs of a FSM parser.
 
 (Considering `code reuse`, the source code of `mumsh` is a little bit different from the following demo structure.)
 
-```C
+```c
 extern char user_input[BUFFER_SIZE];
 
 void parser(){
@@ -778,7 +823,8 @@ void parser(){
 ```
 
 In `mumsh`, we keep the state and condition information in a `parser struct`, which is used as a `local variable` in `parser()`:
-```C
+
+```c
 typedef struct parser {
   size_t buffer_len;        // char buffer length
   int is_src;               // input redirection state
@@ -791,7 +837,8 @@ typedef struct parser {
 ```
 
 In `mumsh`, we save the command-related information in a `cmd struct`, which is used as an `external global variable` in various such as `execute_cmds()` and `check_cmd_xx()` :
-```C
+
+```c
 typedef struct token {
   size_t argc;                // argument count
   char* argv[TOKEN_SIZE];     // argument list
@@ -811,16 +858,20 @@ typedef struct cmd {
 extern cmd_t cmd;
 ```
 
+---
+
 ### 3.6 Background Jobs Handling
+
 In [Section 3.4.4](#344-reaping-child-process-unblockingly), we briefly talk about the mechanism of reaping background process, which is trying to reap all background processes within function `reap_background_jobs()` once users trigger a next input by pressing `ENTER` or interrupt with `CTRL-C`.
 
 To implement built-in command `jobs`, we have to design a more reasonable data structure to
+
 - store the input commands ended with `&`
 - store whether a background process is running or done
 
 Also, this data structure should be flexible in size, because in this project, all the previous background jobs status should be printed out by `jobs` command. And here comes our `job table`, implemented by `struct job`, which type name is `job_t`.
 
-```C
+```c
 #define JOBS_CAPACITY 1024 // job table capacity
 
 typedef struct job {
@@ -835,7 +886,7 @@ typedef struct job {
 
 For example, in the following cases,
 
-```sh
+```shell
 mumsh $ sleep 10 | sleep 10 &
 [1] sleep 10 | sleep 10 &
 mumsh $ sleep 1 &
@@ -845,30 +896,34 @@ mumsh $ jobs
 [2] done sleep 1 &
 ```
 
-- `bg_cnt = 3`
-- `job_cnt = 4`
+- `bg_cnt = 2`
+- `job_cnt = 3`
 - `table_size = 2`
 - `stat_table`
 
-  | index |   status  |
-  |:-----:|:---------:|
+  | index |  status   |
+  | :---: | :-------: |
   |  [1]  | `running` |
-  |  [2]  |   `done`  |
+  |  [2]  |  `done`   |
 
 - `pid_table`
 
   | index |   pid   |   pid   |
-  |:-----:|:-------:|:-------:|
+  | :---: | :-----: | :-----: |
   |  [1]  | `88100` | `88101` |
   |  [2]  | `88102` |         |
 
 - `cmd_table`
 
-  | Index |          Command         |
-  |:-----:|:------------------------:|
+  | Index |         Command          |
+  | :---: | :----------------------: |
   |  [1]  | `sleep 10 \| sleep 10 &` |
-  |  [2]  |        `sleep 1 &`       |
+  |  [2]  |       `sleep 1 &`        |
 
 With this `job table` data structure, we can easily handle the background jobs.
 
+---
+
 ### 3.7 Redirection and Pipe: `dup2()` and `pipe()` System Call
+
+To be written...

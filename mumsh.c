@@ -39,7 +39,8 @@ int main() {
     // reap background jobs triggered by input
     reap_background_jobs();
     // parse input command
-    if (mumsh_parser() != NORMAL) {  // free allocated memory
+    if (mumsh_parser() != NORMAL) {
+      // free allocated memory
       free_cmds();
       continue;
     }

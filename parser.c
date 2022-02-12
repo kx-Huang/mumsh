@@ -69,8 +69,6 @@ int mumsh_parser() {
             // save buffer as argument
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
-            // printf("malloc memory: %p, allocate size: %lu\n",
-            // (void*)(token.argv[token.argc]), parser.buffer_len + 1);
             strcpy(token.argv[token.argc++], parser.buffer);
           }
           // clear buffer
@@ -173,14 +171,10 @@ int mumsh_parser() {
   return NORMAL;
 }
 
-// free after allocating memory for token and reset cmd struct
+// free memory allocated for token and reset cmd struct
 void free_cmds() {
-  for (size_t i = 0; i < cmd.cnt; i++) {
-    for (size_t j = 0; j < cmd.cmds[i].argc; j++) {
-      free(cmd.cmds[i].argv[j]);
-      // printf("free memory: %p\n", (void*)(cmd.cmds[i].argv[j]));
-    }
-  }
+  for (size_t i = 0; i < cmd.cnt; i++)
+    for (size_t j = 0; j < cmd.cmds[i].argc; j++) free(cmd.cmds[i].argv[j]);
   reset_cmd();
 }
 
