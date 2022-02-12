@@ -864,7 +864,7 @@ extern cmd_t cmd;
 
 In [Section 3.4.4](#344-reaping-child-process-unblockingly), we briefly talk about the mechanism of reaping background process, which is trying to reap all background processes within function `reap_background_jobs()` once users trigger a next input by pressing `ENTER` or interrupt with `CTRL-C`.
 
-To implement built-in command `jobs`, we have to design a more reasonable data structure to
+To implement built-in command `jobs`, we have to design a more reasonable data structure to:
 
 - store the input commands ended with `&`
 - store whether a background process is running or done
