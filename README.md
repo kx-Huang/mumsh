@@ -70,7 +70,7 @@ Of course, `mumsh` is only a product of a course project supporting basic functi
 cmd [argv]* [| cmd [argv]* ]* [[> filename][< filename][>> filename]]* [&]
 ```
 
-Seems abstract and mayebe get a little bit confused? Let me explain a little more. For more details, please check the following sections.
+Seems abstract and maybe get a little bit confused? Let me explain a little more.
 
 The input of `mumsh` can be made up of 4 components:
 
