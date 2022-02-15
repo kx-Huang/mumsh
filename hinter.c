@@ -1,4 +1,4 @@
-#include "hint.h"
+#include "hinter.h"
 
 #define cursor_forward(x) printf("\033[%dC", (x))
 #define cursor_backward(x) printf("\033[%DD", (x))

@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "hint.h"
+#include "hinter.h"
 #include "parser.h"
 
 char cmd_buffer[BUFFER_SIZE];
