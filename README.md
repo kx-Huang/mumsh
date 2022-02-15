@@ -8,7 +8,8 @@
 
 # Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
 
-This project is a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
+This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
+- 2022/2/15 add feature: tab-triggered hint and auto-completion
 
 In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including
 
@@ -19,7 +20,7 @@ In this project, a mini shell `mumsh` is implemented with `programming language 
 - Internal commands `exit`/`pwd`/`cd`/`jobs`
 - I/O redirection under bash style syntax
 - Arbitrarily-deep pipes running in parallel
-- `CTRL-C`/`CTRL-D` interruption
+- `CTRL-C` interruption
 - Background jobs
 
 In this `README`, the following content will be included:
