@@ -10,6 +10,7 @@
 
 This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
 - [2022/2/12] feature: dynamic path prefix prompt
+- [2022/2/13] feature: left and right cursor switch
 - [2022/2/15] feature: tab-triggered hint and auto-completion
 - [2022/2/15] to fix:
   1) print overflow regarding terminal size
