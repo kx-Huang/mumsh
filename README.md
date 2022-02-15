@@ -12,9 +12,11 @@ This project is originated from a course project in `VE482 Operating System` [@U
 - [2022/2/12] feature: dynamic path prefix prompt
 - [2022/2/13] feature: left and right cursor switch
 - [2022/2/15] feature: tab-triggered hint and auto-completion
-- [2022/2/15] to fix:
-  1) print overflow regarding terminal size
+- [2022/2/15] to upgrade:
+  1) handle print overflow regarding terminal size
   2) `CTRL-D` keyboard capture and interruption
+  3) key up and down for switching command history
+  4) show git status in prefix
 
 In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including
 
