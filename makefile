@@ -28,5 +28,5 @@ $(MUMSHMC) : $(MUMSH_SRC)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) *.o *.a *~ $(MUMSH) $(MUMSHMC) $(DRIVER)
-	$(RM) *.tar
+	$(RM) -f *.o *.a *~ $(MUMSH) $(MUMSHMC)
+	$(RM) -f *.tar
