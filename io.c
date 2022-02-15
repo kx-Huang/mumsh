@@ -16,9 +16,11 @@ void mumsh_read_cmds() {
 
 // read dangling commands
 void read_dangling_cmds(char *buffer) {
+  len = 0, pos = 0;
+  offset_prefix = 2;
+  clean_hint();
   printf("> ");
   fflush(stdout);
-  offset_prefix = 2;
   hint_interface(buffer);
 }
 
