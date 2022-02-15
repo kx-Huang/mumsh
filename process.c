@@ -33,7 +33,8 @@ void reap_background_jobs() {
 // exit mumsh with cmd "exit"
 int mumsh_cmd_exit() {
   if (cmd.cnt == 1 && cmd.cmds[0].argc >= 1 &&
-      strcmp(cmd.cmds[0].argv[0], "exit") == 0)
+      (strcmp(cmd.cmds[0].argv[0], "exit") == 0 ||
+       strcmp(cmd.cmds[0].argv[0], "q") == 0))
     return NORMAL;
   return -1;
 }
