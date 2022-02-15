@@ -1,26 +1,28 @@
 #include "io.h"
-#include "parser.h"
 
 #include <stddef.h>
 #include <stdlib.h>
+
+#include "hint.h"
+#include "parser.h"
 
 char cmd_buffer[BUFFER_SIZE];
 
 // read commands into buffer
 void mumsh_read_cmds() {
-  prompt_path();
-  prompt_mumsh();
-  write_cmd_buffer(cmd_buffer);
+  prompt_prefix();
+  hint_interface(cmd_buffer);
 }
 
 // read dangling commands
 void read_dangling_cmds(char *buffer) {
   printf("> ");
   fflush(stdout);
-  write_cmd_buffer(buffer);
+  offset_prefix = 2;
+  hint_interface(buffer);
 }
 
-// write commands into buffer
+// write raw commands into buffer (retired)
 void write_cmd_buffer(char *buffer) {
   int ch = 0, i = 0;
   while ((ch = getchar())) {
@@ -33,9 +35,19 @@ void write_cmd_buffer(char *buffer) {
   }
 }
 
+void prompt_prefix() {
+  len = 0, pos = 0;
+  offset_prefix = 0;
+  memset(cmd_buffer, 0, BUFFER_SIZE);
+  clean_hint();
+  prompt_path();
+  prompt_mumsh();
+}
+
 void prompt_mumsh() {
   printf(PURB WHT " mumsh " RESET " ");
   fflush(stdout);
+  offset_prefix += 8;
 }
 
 // print path in mumsh prompts
@@ -58,18 +70,27 @@ void prompt_path() {
     }
     if (depth > 0) depth--;
     // debug_path(from_home, depth, token);
-    if (from_home) {
+    if (from_home)
       printf(BLUB WHT " ~" RESET);
-    } else
+    else
       printf(BLUB WHT " /" RESET);
-    if (depth > 3) printf(BLUB WHT "/..." RESET);
+    offset_prefix += 2;
+    if (depth > 3) {
+      printf(BLUB WHT "/..." RESET);
+      offset_prefix += 4;
+    }
     for (size_t i = 0; i < depth; i++) {
       if (i + 4 > depth) {
-        if (i != 0 || (i == 0 && from_home)) printf(BLUB WHT "/" RESET);
+        if (i != 0 || (i == 0 && from_home)) {
+          printf(BLUB WHT "/" RESET);
+          offset_prefix++;
+        }
         printf(BLUB WHT "%s" RESET, token[i]);
+        offset_prefix += strlen(token[i]);
       }
     }
     printf(BLUB WHT " " RESET);
+    offset_prefix++;
     fflush(stdout);
   }
   free(path);
