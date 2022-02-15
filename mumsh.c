@@ -44,7 +44,7 @@ int main() {
       free_cmds();
       continue;
     }
-    //debug_parser();
+    // debug_parser();
     // no command exist
     if (cmd.cnt == 0) continue;
     // cmd "exit"
