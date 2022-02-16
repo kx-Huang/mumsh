@@ -47,8 +47,6 @@ typedef struct parser {
   char buffer[BUFFER_SIZE];
 } parser_t;
 
-void debug_path(int from_home, size_t depth, char *token[TOKEN_SIZE]);
-
 // for hint interface
 extern size_t len;
 extern size_t pos;
@@ -63,5 +61,8 @@ extern char hint[BUFFER_SIZE][TOKEN_SIZE];
 // for command parser
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
+
+// for debug
+void debug_path(int from_home, size_t depth, char *token[TOKEN_SIZE]);
 
 #endif  // DATA_H

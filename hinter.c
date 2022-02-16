@@ -153,8 +153,8 @@ void create_puzzle() {
 }
 
 // return number of matched files
-size_t solve_puzzle(int type) {
-  size_t num_hint = 0;
+void solve_puzzle(int type) {
+  num_hint = 0;
   struct dirent *dir;
   DIR *d = opendir(path);
   if (d) {
@@ -188,7 +188,6 @@ size_t solve_puzzle(int type) {
     qsort(hint, num_hint, TOKEN_SIZE, strcmp);
     closedir(d);
   }
-  return num_hint;
 }
 
 // return position of the cursor after printing
@@ -233,7 +232,7 @@ void auto_complete(char buffer[BUFFER_SIZE]) {
   }
 }
 
-// buffer one char
+//  input one char
 void write_char(int c, char buffer[BUFFER_SIZE]) {
   putchar(c);
   for (size_t i = ++len; i > pos; i--) buffer[i] = buffer[i - 1];
@@ -255,9 +254,9 @@ void delete_char(char buffer[BUFFER_SIZE]) {
   }
 }
 
-// 0: no hint
-// 1: full hint (without "." and "..")
-// 2: matched hint (include "." and "..")
+// hint type: 0 - no hint
+//            1 - full hint (without "." and "..")
+//            2 - matched hint (include "." and "..")
 int hint_type(char buffer[BUFFER_SIZE]) {
   // cursor at leftmost
   if (pos == 0 && len == 0) return 1;
@@ -271,11 +270,11 @@ int hint_type(char buffer[BUFFER_SIZE]) {
 }
 
 void hint_interface(char *buffer) {
-  int c;
   strcpy(path, "./");
-
+  // main loop
   while (1) {
-    c = kbget();
+    // get keyboard input
+    int c = kbget();
     // enter key
     if (c == KEY_ENTER) {
       clean_hint();
@@ -294,7 +293,7 @@ void hint_interface(char *buffer) {
       if (type == 1) {
         strcpy(puzzle, "");
         strcpy(path, "./");
-        num_hint = solve_puzzle(type);
+        solve_puzzle(type);
         // only one match: auto complete
         if (num_hint >= 1) auto_complete(buffer);
         if (num_hint > 1) print_hint();
@@ -306,7 +305,7 @@ void hint_interface(char *buffer) {
         create_puzzle();
         // if token is a path, print exclude "." and ".."
         type = strlen(puzzle) ? 2 : 1;
-        num_hint = solve_puzzle(type);
+        solve_puzzle(type);
         // auto complete if only one found
         if (num_hint >= 1) auto_complete(buffer);
         if (num_hint > 1) print_hint();

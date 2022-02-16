@@ -18,7 +18,10 @@
 #define BLUB "\x1B[44m"
 #define PURB "\x1B[45m"
 
+// called in mumsh.c
 void mumsh_read_cmds();
+
+// called in io.c
 void prompt_prefix();
 void prompt_path();
 void prompt_mumsh();
