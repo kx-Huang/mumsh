@@ -34,7 +34,7 @@ static int getch(void) {
   int c = 0;
   tcgetattr(0, &oterm);
   memcpy(&term, &oterm, sizeof(term));
-  term.c_lflag &= (unsigned long)~(ICANON | ECHO);
+  term.c_lflag &= (size_t) ~(ICANON | ECHO);
   term.c_cc[VMIN] = 1;
   term.c_cc[VTIME] = 0;
   tcsetattr(0, TCSANOW, &term);
@@ -48,7 +48,7 @@ static int kbhit(void) {
   int c = 0;
   tcgetattr(0, &oterm);
   memcpy(&term, &oterm, sizeof(term));
-  term.c_lflag &= (unsigned long)~(ICANON | ECHO);
+  term.c_lflag &= (size_t) ~(ICANON | ECHO);
   term.c_cc[VMIN] = 0;
   term.c_cc[VTIME] = 1;
   tcsetattr(0, TCSANOW, &term);
@@ -203,7 +203,7 @@ void print_hint() {
 void auto_complete(char buffer[BUFFER_SIZE]) {
   // find the maximum match
   char match[TOKEN_SIZE] = {0};
-  if (num_hint > 1)
+  if (num_hint > 1) {
     for (size_t j = 0; hint[0][j]; j++) {
       char c = hint[0][j];
       int same = 1;
@@ -215,6 +215,7 @@ void auto_complete(char buffer[BUFFER_SIZE]) {
       if (!same) break;
       match[j] = c;
     }
+  }
   if (num_hint == 1) strcpy(match, hint[0]);
   // plug in matched part
   if (strlen(match)) {
@@ -233,32 +234,31 @@ void auto_complete(char buffer[BUFFER_SIZE]) {
 }
 
 // buffer one char
-void write_char(int c, char buffer[BUFFER_SIZE], size_t *len, size_t *pos) {
+void write_char(int c, char buffer[BUFFER_SIZE]) {
   putchar(c);
-  for (size_t i = ++(*len); i > (*pos); i--) buffer[i] = buffer[i - 1];
-  buffer[(*pos)++] = (char)c;
-  for (size_t i = *pos; i < *len; i++) putchar(buffer[i]);
-  for (size_t i = 0; i < *len - *pos; i++) cursor_backward(1);
+  for (size_t i = ++len; i > pos; i--) buffer[i] = buffer[i - 1];
+  buffer[pos++] = (char)c;
+  for (size_t i = pos; i < len; i++) putchar(buffer[i]);
+  for (size_t i = 0; i < len - pos; i++) cursor_backward(1);
 }
 
 // delete one char
-void delete_char(char buffer[BUFFER_SIZE], size_t *len, size_t *pos) {
-  if (*pos) {
+void delete_char(char buffer[BUFFER_SIZE]) {
+  if (pos) {
     cursor_backward(1);
-    if (*len) *len -= 1;
-    *pos -= 1;
-    for (size_t i = *pos; i < *len; i++) buffer[i] = buffer[i + 1];
-    buffer[*len] = 0;
-    for (size_t i = *pos; i < *len; i++) putchar(buffer[i]);
+    if (len) len--;
+    for (size_t i = --pos; i < len; i++) buffer[i] = buffer[i + 1];
+    buffer[len] = 0;
+    for (size_t i = pos; i < len; i++) putchar(buffer[i]);
     printf(" ");
-    cursor_backward((int)(*len - *pos + 1));
+    cursor_backward((int)(len - pos + 1));
   }
 }
 
 // 0: no hint
 // 1: full hint (without "." and "..")
 // 2: matched hint (include "." and "..")
-int hint_type(char buffer[BUFFER_SIZE], size_t len, size_t pos) {
+int hint_type(char buffer[BUFFER_SIZE]) {
   // cursor at leftmost
   if (pos == 0 && len == 0) return 1;
   if (pos == 0 && len > 0) return buffer[pos] == ' ' ? 1 : 0;
@@ -289,7 +289,7 @@ void hint_interface(char *buffer) {
     if (c == KEY_TAB) {
       // reset variable
       clean_hint();
-      int type = hint_type(buffer, len, pos);
+      int type = hint_type(buffer);
       // all hint: after space or none
       if (type == 1) {
         strcpy(puzzle, "");
@@ -336,11 +336,11 @@ void hint_interface(char *buffer) {
     }
     // delete key
     if (c == KEY_DELETE) {
-      delete_char(buffer, &len, &pos);
+      delete_char(buffer);
       continue;
     }
     // ordinary buffer
-    write_char(c, buffer, &len, &pos);
+    write_char(c, buffer);
   }
   // debug_hint(buffer);
 }
