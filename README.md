@@ -10,8 +10,6 @@
 
 This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
 
----
-
 ## Change Log
 
 - [2022/2/12] Add feature: Dynamic current path prompt in prefix
