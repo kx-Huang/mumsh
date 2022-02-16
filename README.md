@@ -50,11 +50,13 @@ We have 4 kinds of files in this project:
 - C Source files: (in executing order)
   - `mumsh.c`: where main read/parse/execute loop of `mumsh` locates
   - `io.c`: handle reading command line input of `mumsh`
+  - `hinter.c`: input interface with tab-triggered hint and auto-completion
   - `parser.c`: parse user input into formatted commands for coming execution
   - `process.c`: execute commands in child process according to specifications
 - C header files: (hierarchy from top to bottom)
   - `mumsh.h`
   - `io.h`
+  - `hinter.h`
   - `parser.h`
   - `process.h`: store global variables regarding process
   - `data.h`: store extern global variables regarding read/parse/execute loop
