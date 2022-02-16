@@ -1,6 +1,6 @@
 <div align="center">
 
-# A C-based Mini Shell: `mumsh`
+# `mumsh`: A Mini Shell Written in C
 
 </div>
 
@@ -9,17 +9,23 @@
 # Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
 
 This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
-- [2022/2/12] feature: dynamic path prefix prompt
-- [2022/2/13] feature: left and right cursor switch
-- [2022/2/15] feature: tab-triggered hint and auto-completion
-- [2022/2/15] to upgrade:
-  1) handle print overflow regarding terminal size
-  2) `CTRL-D` keyboard capture and interruption
-  3) key up and down for switching command history
-  4) show git status in prefix
 
-In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including
+---
 
+## Change Log
+
+- [2022/2/12] Add feature: Dynamic current path prompt in prefix
+- [2022/2/13] Add feature: Left & right cursor switch and dynamic insert & delete
+- [2022/2/15] Add feature: Tab-triggered hint and auto-completion
+- Future upgrade list:
+  1) Key up and down for switching command history
+  2) Handle print overflow regarding terminal size
+  3) `CTRL-D` keyboard capture and interruption
+  4) Show `Git` status in prefix
+
+In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including:
+
+- Tab-triggered hint and auto-completion
 - Read/parse/execute loop
 - Incomplete input waiting
 - Syntax error handling
