@@ -54,8 +54,9 @@ extern size_t num_hint;
 extern size_t width_clean;
 extern size_t offset_prefix;
 extern char token[BUFFER_SIZE];
-extern char puzzle[TOKEN_SIZE];
+extern char puzzle[BUFFER_SIZE];
 extern char path[TOKEN_SIZE];
+extern char fit[TOKEN_SIZE];
 extern char hint[BUFFER_SIZE][TOKEN_SIZE];
 
 // for command parser
