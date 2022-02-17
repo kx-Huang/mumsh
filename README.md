@@ -8,7 +8,7 @@
 
 # Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
 
-This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/).
+This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C`.
 
 ## Change Log
 
@@ -21,7 +21,7 @@ This project is originated from a course project in `VE482 Operating System` [@U
   3) `CTRL-D` keyboard capture and interruption
   4) Show `Git` status in prefix
 
-In this project, a mini shell `mumsh` is implemented with `programming language C`. `mumsh` supports some basic shell functionalities including:
+`mumsh` supports some basic shell functionalities including:
 
 - Tab-triggered hint and auto-completion
 - Read/parse/execute loop
