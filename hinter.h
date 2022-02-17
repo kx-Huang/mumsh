@@ -9,21 +9,43 @@
 
 #include "data.h"
 
+#define cursor_forward(x) printf("\033[%dC", (x))
+#define cursor_backward(x) printf("\033[%DD", (x))
+#define cursor_upward(x) printf("\033[%DA", (x))
+
+#define KEY_ESCAPE 0x001b
+#define KEY_DELETE 0x007f
+#define KEY_TAB 0x0009
+#define KEY_ENTER 0x000a
+#define KEY_UP 0x0105
+#define KEY_DOWN 0x0106
+#define KEY_RIGHT 0x0107
+#define KEY_LEFT 0x0108
+
+// capture key-board input
+struct termios term, oterm;
+int keyboard_get(void);
+int keyboard_hit(void);
+int keyboard_char(void);
+int keyboard_arrow(void);
+
 // called in io.c
+void mumsh_hinter(char *buffer);
 void clean_hint();
-void hint_interface(char *buffer);
 
 // called in hinter.c
 int hint_type(char buffer[BUFFER_SIZE]);
 void find_token(char buffer[BUFFER_SIZE], char delimiter[8]);
 void create_puzzle();
-void solve_puzzle();
-void print_hint();
+void find_match();
+void longest_fit();
 void auto_complete(char buffer[BUFFER_SIZE]);
+void print_hint();
 void write_char(int c, char buffer[BUFFER_SIZE]);
 void delete_char(char buffer[BUFFER_SIZE]);
+void _calibrate_cursor(size_t pos_now);
 
 // for debug
-void debug_hint(char *buffer);
+void debug_hinter(char *buffer);
 
 #endif  // HINT_H
