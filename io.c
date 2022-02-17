@@ -11,7 +11,7 @@ char cmd_buffer[BUFFER_SIZE];
 // read commands into buffer
 void mumsh_read_cmds() {
   prompt_prefix();
-  hint_interface(cmd_buffer);
+  mumsh_hinter(cmd_buffer);
 }
 
 // read dangling commands
@@ -21,7 +21,7 @@ void read_dangling_cmds(char *buffer) {
   clean_hint();
   printf("> ");
   fflush(stdout);
-  hint_interface(buffer);
+  mumsh_hinter(buffer);
 }
 
 // write raw commands into buffer (retired)
