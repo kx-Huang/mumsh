@@ -8,7 +8,7 @@
 
 # Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
 
-This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C`.
+This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C`for Unix-like machine.
 
 ## Change Log
 
@@ -64,6 +64,8 @@ We have 4 kinds of files in this project:
   - used for quick build and clean of executable file
 
 ## 1. Build and Run `mumsh`
+
+`mumsh` is only available on Unix-like machine, as some libraries are not avaiable in Windows.
 
 - build: `$ make`
 - run: `$ ./mumsh`
