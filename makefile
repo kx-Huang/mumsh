@@ -15,13 +15,13 @@ all: $(MUMSH) $(MUMSHMC)
 tar:
 	tar -cvzf $(TAR_NAME) $(MUMSH_SRC) $(MUMSH_H)
 
-check: $(MUMSH) $(MUMSHMC)
+check: $(MUMSH) $(MUMSHMC) $(MUMSH_H)
 	cpplint --linelength=120 --filter=-legal,-readability/casting,-whitespace,-runtime/printf,-runtime/threadsafe_fn,-readability/todo,-build/include_subdir,-build/header_guard *.c *.h
 
-$(MUMSH): $(MUMSH_SRC)
+$(MUMSH): $(MUMSH_SRC) $(MUMSH_H)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)
 
-$(MUMSHMC) : $(MUMSH_SRC)
+$(MUMSHMC) : $(MUMSH_SRC) $(MUMSH_H)
 	$(CC) $(CFLAGS) $(MUMSHMC_FLAGS) -o $(MUMSHMC) $(MUMSH_SRC)
 
 .c.o:
