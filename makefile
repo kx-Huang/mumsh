@@ -9,7 +9,7 @@ TAR_NAME = mumsh.tar
 
 .PHONY: clean
 
-all: $(MUMSH) $(MUMSHMC)
+all: $(MUMSH)
 	@echo mumsh successfully constructed
 
 tar:
@@ -17,6 +17,7 @@ tar:
 
 check: $(MUMSH) $(MUMSHMC) $(MUMSH_H)
 	cpplint --linelength=120 --filter=-legal,-readability/casting,-whitespace,-runtime/printf,-runtime/threadsafe_fn,-readability/todo,-build/include_subdir,-build/header_guard *.c *.h
+	./$(MUMSHMC)
 
 $(MUMSH): $(MUMSH_SRC) $(MUMSH_H)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)
