@@ -301,7 +301,8 @@ void create_puzzle() {
   puzzle[len_token - (size_t)pos_slash - 1] = 0;
 }
 
-int cmpstr(void const *a, void const *b) {
+// compare method for qsort, used to sort hint[][]
+int cmp(void const *a, void const *b) {
   return strcmp((char const *)a, (char const *)b);
 }
 
@@ -340,7 +341,7 @@ void find_match_filename(int type) {
       }
     }
     // sort hint in alphabetical order
-    qsort(hint, num_hint, TOKEN_SIZE, cmpstr);
+    qsort(hint, num_hint, TOKEN_SIZE, cmp);
     closedir(d);
   }
 }
