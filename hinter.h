@@ -9,9 +9,9 @@
 
 #include "data.h"
 
-#define cursor_forward(x) printf("\033[%dC", (x))
-#define cursor_backward(x) printf("\033[%DD", (x))
-#define cursor_upward(x) printf("\033[%DA", (x))
+#define cursor_forward(x) printf("\033[%zuC", x)
+#define cursor_backward(x) printf("\033[%zuD", x)
+#define cursor_upward(x) printf("\033[%zuA", x)
 
 #define KEY_ESCAPE 0x001b
 #define KEY_DELETE 0x007f
@@ -34,15 +34,18 @@ void mumsh_hinter(char *buffer);
 void clean_hint();
 
 // called in hinter.c
+void clean_buffer(char buffer[BUFFER_SIZE]);
 int hint_type(char buffer[BUFFER_SIZE]);
 void find_token(char buffer[BUFFER_SIZE], char delimiter[8]);
 void create_puzzle();
-void find_match();
+void find_match_filename(int type);
+void find_match_history(char buffer[BUFFER_SIZE]);
 void longest_fit();
 void auto_complete(char buffer[BUFFER_SIZE]);
 void print_hint();
 void write_char(int c, char buffer[BUFFER_SIZE]);
 void delete_char(char buffer[BUFFER_SIZE]);
+void save_history(char buffer[BUFFER_SIZE]);
 void _calibrate_cursor(size_t pos_now);
 
 // for debug
