@@ -15,16 +15,16 @@ This project is originated from a course project in `VE482 Operating System` [@U
 - [2022/2/12] Add feature: Dynamic current path prompt in prefix
 - [2022/2/13] Add feature: Left & right cursor switch and dynamic insert & delete
 - [2022/2/15] Add feature: Tab-triggered hint and auto-completion
+- [2022/2/19] Add feature: Command history auto-completion with smart search
 - Future upgrade list:
-  1) Key up and down for switching command history
-  2) Handle print overflow regarding terminal size
-  3) `CTRL-D` keyboard capture and interruption
-  4) Show `Git` status in prefix
+  1) Handle print overflow regarding terminal size
+  2) `CTRL-D` keyboard capture and interruption
+  3) Show `Git` status in prefix
 
 `mumsh` supports some basic shell functionalities including:
 
 - Tab-triggered hint and auto-completion
-- Read/parse/execute loop
+- Command history auto-completion with smart search
 - Incomplete input waiting
 - Syntax error handling
 - Quotes parsing
