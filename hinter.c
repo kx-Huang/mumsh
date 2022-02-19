@@ -3,13 +3,21 @@
 size_t len;
 size_t pos;
 size_t num_hint;
+size_t num_history_all;
+size_t num_history_match;
 size_t width_clean;
 size_t offset_prefix;
+size_t index_history_all;
+size_t index_history_match;
+bool match_mode;
+bool iterate_mode;
 char token[BUFFER_SIZE];
-char puzzle[BUFFER_SIZE];
+char puzzle[TOKEN_SIZE];
 char path[TOKEN_SIZE];
-char fit[TOKEN_SIZE];
-char hint[BUFFER_SIZE][TOKEN_SIZE] = {{0}};
+char fit[BUFFER_SIZE];
+char hint[BUFFER_SIZE][TOKEN_SIZE];
+char history_all[BUFFER_SIZE][BUFFER_SIZE];
+char history_match[BUFFER_SIZE][BUFFER_SIZE];
 
 // capture keyboard event
 int keyboard_get(void) {
@@ -88,6 +96,7 @@ void mumsh_hinter(char *buffer) {
     // enter key
     if (c == KEY_ENTER) {
       clean_hint();
+      save_history(buffer);
       buffer[len] = '\n';
       printf("\n");
       break;
@@ -96,21 +105,23 @@ void mumsh_hinter(char *buffer) {
     if (c == KEY_ESCAPE) continue;
     // tab key
     if (c == KEY_TAB) {
+      match_mode = false;
+      iterate_mode = false;
       clean_hint();
       int type = hint_type(buffer);
-      // cursor after space or none: all hint
-      if (type == 1) {
+      // cursor after space or none: full hint
+      if (type == FULL_HINT) {
         strcpy(puzzle, "");
         strcpy(path, "./");
       }
       // cursor after token: matched hint
-      if (type == 2) {
+      if (type == MATCHED_HINT) {
         find_token(buffer, " <>|");
         create_puzzle();
         // if token is a path, print exclude "." and ".."
-        type = strlen(puzzle) ? 2 : 1;
+        type = strlen(puzzle) ? MATCHED_HINT : FULL_HINT;
       }
-      find_match(type);
+      find_match_filename(type);
       // auto complete if only one match
       if (num_hint >= 1) {
         longest_fit();
@@ -121,34 +132,102 @@ void mumsh_hinter(char *buffer) {
     }
     // up and down key
     if (c == KEY_UP | c == KEY_DOWN) {
-      // TODO: show history
+      // no response if not in history mode
+      if (c == KEY_DOWN && !match_mode && !iterate_mode) continue;
+      clean_hint();
+      // if last mode is iterate mode, up or down all history index by one
+      if (iterate_mode) {
+        if (c == KEY_UP) {
+          if (num_history_all && index_history_all) index_history_all--;
+        } else if (c == KEY_DOWN) {
+          if (num_history_all && index_history_all < num_history_all - 1) {
+            index_history_all++;
+          } else {
+            match_mode = false;
+            iterate_mode = false;
+            clean_buffer(buffer);
+            continue;
+          }
+        }
+        // if last mode is match mode, up or down matched history index by one
+      } else if (match_mode) {
+        if (c == KEY_UP) {
+          // feature: click KEY UP, if not match then move cursor to right most
+          if (num_history_match && index_history_match) index_history_match--;
+        } else if (c == KEY_DOWN) {
+          if (num_history_match &&
+              index_history_match < num_history_match - 1) {
+            index_history_match++;
+          }
+        }
+        // if cursor leftmost, start iterate mode
+      } else if (pos == 0) {
+        if (c == KEY_DOWN) continue;
+        match_mode = false;
+        iterate_mode = true;
+        if (num_history_all) index_history_all = num_history_all - 1;
+      } else {
+        // find all matched history
+        match_mode = true;
+        iterate_mode = false;
+        find_match_history(buffer);
+        if (num_history_match <= 1) continue;
+        index_history_match = num_history_match - 2;
+      }
+      // write history into buffer
+      clean_buffer(buffer);
+      strcpy(puzzle, "");
+      if (iterate_mode)
+        strcpy(fit, history_all[index_history_all]);
+      else if (match_mode)
+        strcpy(fit, history_match[index_history_match]);
+      auto_complete(buffer);
       continue;
     }
     // left arrow key
     if (c == KEY_LEFT) {
+      match_mode = false;
+      iterate_mode = false;
       if (pos > 0) {
-        cursor_backward(1);
+        cursor_backward((size_t)1);
         pos--;
       }
       continue;
     }
     // right arrow key
     if (c == KEY_RIGHT) {
+      match_mode = false;
+      iterate_mode = false;
       if (pos < len) {
-        cursor_forward(1);
+        cursor_forward((size_t)1);
         pos++;
       }
       continue;
     }
     // delete key
     if (c == KEY_DELETE) {
+      match_mode = false;
+      iterate_mode = false;
       delete_char(buffer);
       continue;
     }
     // ordinary buffer
+    match_mode = false;
+    iterate_mode = false;
     write_char(c, buffer);
   }
   // debug_hinter(buffer);
+}
+
+// clean all input
+// update: buffer[], len, pos
+void clean_buffer(char buffer[BUFFER_SIZE]) {
+  if (len > pos) {
+    cursor_forward(len - pos);
+    pos = len;
+  }
+  size_t len_delete = len;
+  for (size_t i = 0; i < len_delete; i++) delete_char(buffer);
 }
 
 // clean printed matched fileneams
@@ -162,20 +241,20 @@ void clean_hint() {
 }
 
 // determine hint type
-// input: buffer
+// input: buffer[]
 // hint type: 0 - no hint
 //            1 - full hint (without "." and "..")
 //            2 - matched hint (include "." and "..")
 int hint_type(char buffer[BUFFER_SIZE]) {
   // cursor at leftmost
-  if (pos == 0 && len == 0) return 1;
-  if (pos == 0 && len > 0) return buffer[pos] == ' ' ? 1 : 0;
+  if (pos == 0 && len == 0) return FULL_HINT;
+  if (pos == 0 && len > 0) return buffer[pos] == ' ' ? FULL_HINT : NO_HINT;
   // cursor at rightmost
-  if (pos == len) return buffer[pos - 1] == ' ' ? 1 : 2;
+  if (pos == len) return buffer[pos - 1] == ' ' ? FULL_HINT : MATCHED_HINT;
   //  cursor in middle
-  if (buffer[pos - 1] == ' ' && buffer[pos] == ' ') return 1;
-  if (buffer[pos - 1] != ' ' && buffer[pos] == ' ') return 2;
-  return 0;
+  if (buffer[pos - 1] == ' ' && buffer[pos] == ' ') return FULL_HINT;
+  if (buffer[pos - 1] != ' ' && buffer[pos] == ' ') return MATCHED_HINT;
+  return NO_HINT;
 }
 
 // find current token
@@ -225,14 +304,14 @@ void create_puzzle() {
 // find all matched files
 // input: hint type (0 - no hint, 1 - full hint, 2 - matched hint)
 // update: hint[][], num_hint
-void find_match(int type) {
+void find_match_filename(int type) {
   num_hint = 0;
   struct dirent *dir;
   DIR *d = opendir(path);
   if (d) {
     size_t len_puzzle = strlen(puzzle);
     while ((dir = readdir(d)) != NULL) {
-      int match = 1;
+      bool match = true;
       char filename[TOKEN_SIZE] = {0};
       strcpy(filename, dir->d_name);
       // append '/' to path
@@ -243,7 +322,7 @@ void find_match(int type) {
       // find matched filename start with same pattern
       for (size_t i = 0; i < len_puzzle; i++) {
         if (dir->d_name[i] != puzzle[i]) {
-          match = 0;
+          match = false;
           break;
         }
       }
@@ -266,15 +345,15 @@ void find_match(int type) {
 // input: hint[][]
 // update: fit[]
 void longest_fit() {
-  memset(fit, 0, TOKEN_SIZE);
+  memset(fit, 0, BUFFER_SIZE);
   if (num_hint <= 0) return;
   if (num_hint == 1) strcpy(fit, hint[0]);
   for (size_t j = 0; hint[0][j]; j++) {
     char c = hint[0][j];
-    int same = 1;
+    bool same = true;
     for (size_t i = 1; i < num_hint; i++)
       if (hint[i][j] != c) {
-        same = 0;
+        same = false;
         break;
       }
     if (!same) break;
@@ -282,10 +361,28 @@ void longest_fit() {
   }
 }
 
+// find the matched command history except itself
+// input: history[][], buffer[]
+// update: history_match[], num_history_match
+// feature: num_history_match >= 1
+void find_match_history(char buffer[BUFFER_SIZE]) {
+  num_history_match = 0;
+  char last_match[BUFFER_SIZE] = {0};
+  memset(history_match, 0, BUFFER_SIZE);
+  for (size_t i = 0; i < num_history_all; i++) {
+    if (strlen(history_all[i]) > strlen(buffer) &&
+        strcmp(last_match, history_all[i]) &&
+        strncmp(history_all[i], buffer, strlen(buffer)) == 0) {
+      strcpy(last_match, history_all[i]);
+      strcpy(history_match[num_history_match++], history_all[i]);
+    }
+  }
+  strcpy(history_match[num_history_match++], buffer);
+}
+
 // auto complete the longest fit of match
-// matched part
 // input: fit[], puzzle[]
-// update: buffer[], pos, len
+// update: buffer[], len, pos
 void auto_complete(char buffer[BUFFER_SIZE]) {
   if (strlen(fit)) {
     size_t offset = len - pos;
@@ -297,7 +394,7 @@ void auto_complete(char buffer[BUFFER_SIZE]) {
     for (size_t i = 0; i < len_add; i++) buffer[pos + i] = fit[len_puzzle + i];
     for (size_t i = pos; i < len; i++) putchar(buffer[i]);
     pos += len_add;
-    if (offset > 0) cursor_backward((int)(offset));
+    if (offset > 0) cursor_backward(offset);
   }
 }
 
@@ -310,43 +407,56 @@ void print_hint() {
 }
 
 // input one char
-// update: buffer, pos, len
+// update: buffer[], pos, len
 void write_char(int c, char buffer[BUFFER_SIZE]) {
   putchar(c);
   for (size_t i = ++len; i > pos; i--) buffer[i] = buffer[i - 1];
   buffer[pos++] = (char)c;
   for (size_t i = pos; i < len; i++) putchar(buffer[i]);
-  for (size_t i = 0; i < len - pos; i++) cursor_backward(1);
+  for (size_t i = 0; i < len - pos; i++) cursor_backward((size_t)1);
 }
 
 // delete one char
-// update: buffer, pos, len
+// update: buffer[], pos, len
 void delete_char(char buffer[BUFFER_SIZE]) {
   if (pos) {
-    cursor_backward(1);
+    cursor_backward((size_t)1);
     if (len) len--;
     for (size_t i = --pos; i < len; i++) buffer[i] = buffer[i + 1];
     buffer[len] = 0;
     for (size_t i = pos; i < len; i++) putchar(buffer[i]);
     printf(" ");
-    cursor_backward((int)(len - pos + 1));
+    cursor_backward(len - pos + 1);
   }
+}
+
+// save command into history (except for all spaces)
+void save_history(char buffer[BUFFER_SIZE]) {
+  int all_space = 1;
+  size_t len = strlen(buffer);
+  for (size_t i = 0; i < len; i++) {
+    if (buffer[i] != ' ') {
+      all_space = 0;
+      break;
+    }
+  }
+  if (!all_space) strcpy(history_all[num_history_all++], buffer);
 }
 
 // move cursor to user input
 void _calibrate_cursor(size_t pos_now) {
-  cursor_upward((int)num_hint);
+  cursor_upward(num_hint);
   if (pos_now < pos + offset_prefix)
-    cursor_forward((int)(pos + offset_prefix - pos_now));
+    cursor_forward(pos + offset_prefix - pos_now);
   else if (pos_now > pos + offset_prefix)
-    cursor_backward((int)(pos_now - pos - offset_prefix));
+    cursor_backward(pos_now - pos - offset_prefix);
 }
 
 // debug hinter
 void debug_hinter(char *buffer) {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-  printf("------ Debug ------\n");
+  printf("------- Debug -------\n");
   printf("input: %s", buffer);
   printf("path: %s\n", path);
   printf("puzzle: %s\n", puzzle);
@@ -354,5 +464,11 @@ void debug_hinter(char *buffer) {
   printf("buffer len: %zu\n", len);
   printf("ttl length: %d\n", w.ws_col);
   printf("ttl height: %d\n", w.ws_row);
-  printf("-------------------\n");
+  printf("---- All History ----\n");
+  for (size_t i = 0; i < num_history_all; i++)
+    printf("[%zu]: %s\n", i, history_all[i]);
+  printf("-- Matched History --\n");
+  for (size_t i = 0; i < num_history_match; i++)
+    printf("[%zu]: %s\n", i, history_match[i]);
+  printf("------ Output -------\n");
 }
