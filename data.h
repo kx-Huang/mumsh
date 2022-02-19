@@ -6,6 +6,11 @@
 #define COMMAND_SIZE 512
 #define PROCESS_SIZE 512
 
+#define NO_HINT 0
+#define FULL_HINT 1
+#define MATCHED_HINT 2
+
+#include <stdbool.h>
 #include <stdio.h>
 
 enum error_type {
@@ -47,19 +52,27 @@ typedef struct parser {
   char buffer[BUFFER_SIZE];
 } parser_t;
 
-// for hint interface
+// for hinter
 extern size_t len;
 extern size_t pos;
 extern size_t num_hint;
+extern size_t num_history_all;
+extern size_t num_history_match;
 extern size_t width_clean;
 extern size_t offset_prefix;
+extern size_t index_history_all;
+extern size_t index_history_match;
+extern bool iterate_mode;
+extern bool match_mode;
 extern char token[BUFFER_SIZE];
-extern char puzzle[BUFFER_SIZE];
+extern char puzzle[TOKEN_SIZE];
 extern char path[TOKEN_SIZE];
-extern char fit[TOKEN_SIZE];
+extern char fit[BUFFER_SIZE];
 extern char hint[BUFFER_SIZE][TOKEN_SIZE];
+extern char history_all[BUFFER_SIZE][BUFFER_SIZE];
+extern char history_match[BUFFER_SIZE][BUFFER_SIZE];
 
-// for command parser
+// for parser
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
 
