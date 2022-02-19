@@ -2,6 +2,7 @@
 #define HINT_H
 
 #include <dirent.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <termios.h>
