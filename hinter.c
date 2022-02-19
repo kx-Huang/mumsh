@@ -445,7 +445,11 @@ void save_history(char buffer[BUFFER_SIZE]) {
       break;
     }
   }
-  if (!all_space) strcpy(history_all[num_history_all++], buffer);
+  if (!all_space) {
+    if (num_history_all == 0 ||
+        strcmp(buffer, history_all[num_history_all - 1]))
+      strcpy(history_all[num_history_all++], buffer);
+  }
 }
 
 // move cursor to user input
