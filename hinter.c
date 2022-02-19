@@ -301,6 +301,10 @@ void create_puzzle() {
   puzzle[len_token - (size_t)pos_slash - 1] = 0;
 }
 
+int cmpstr(void const *a, void const *b) {
+  return strcmp((char const *)a, (char const *)b);
+}
+
 // find all matched files
 // input: hint type (0 - no hint, 1 - full hint, 2 - matched hint)
 // update: hint[][], num_hint
@@ -336,7 +340,7 @@ void find_match_filename(int type) {
       }
     }
     // sort hint in alphabetical order
-    qsort(hint, num_hint, TOKEN_SIZE, strcmp);
+    qsort(hint, num_hint, TOKEN_SIZE, cmpstr);
     closedir(d);
   }
 }
