@@ -11,6 +11,7 @@ size_t index_history_all;
 size_t index_history_match;
 bool match_mode;
 bool iterate_mode;
+bool from_home;
 char token[BUFFER_SIZE];
 char puzzle[TOKEN_SIZE];
 char path[TOKEN_SIZE];
@@ -311,6 +312,17 @@ int cmp(void const *a, void const *b) {
 // update: hint[][], num_hint
 void find_match_filename(int type) {
   num_hint = 0;
+  from_home = false;
+  // replace ~ with home path
+  if (strncmp(path, "~/", 2) == 0) {
+    from_home = true;
+    struct passwd *pw = getpwuid(getuid());
+    char tmp[BUFFER_SIZE] = {0};
+    strcpy(tmp, path);
+    strcpy(path, pw->pw_dir);
+    strcat(path, "/");
+    if (strlen(tmp) > 2) strcat(path, tmp + 2);
+  }
   struct dirent *dir;
   DIR *d = opendir(path);
   if (d) {

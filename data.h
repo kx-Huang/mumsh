@@ -64,6 +64,7 @@ extern size_t index_history_all;
 extern size_t index_history_match;
 extern bool iterate_mode;
 extern bool match_mode;
+extern bool from_home;
 extern char token[BUFFER_SIZE];
 extern char puzzle[TOKEN_SIZE];
 extern char path[TOKEN_SIZE];
