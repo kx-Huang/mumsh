@@ -8,7 +8,7 @@
 
 # Documentation ![](https://visitor-badge.glitch.me/badge?page_id=kx-Huang.mumsh&left_color=gray&right_color=blue)
 
-This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C`for Unix-like machine.
+This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C` for Unix-like machine.
 
 ## Change Log
 
