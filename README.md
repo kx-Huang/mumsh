@@ -20,6 +20,7 @@ This project is originated from a course project in `VE482 Operating System` [@U
   1) Handle print overflow regarding terminal size
   2) `CTRL-D` keyboard capture and interruption
   3) Show `Git` status in prefix
+  4) Auto translate `~` to home path in parser
 
 `mumsh` supports some basic shell functionalities including:
 
