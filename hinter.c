@@ -122,13 +122,15 @@ void mumsh_hinter(char *buffer) {
         // if token is a path, print exclude "." and ".."
         type = strlen(puzzle) ? MATCHED_HINT : FULL_HINT;
       }
-      find_match_filename(type);
-      // auto complete if only one match
-      if (num_hint >= 1) {
-        longest_fit();
-        auto_complete(buffer);
+      if (type != NO_HINT) {
+        find_match_filename(type);
+        // auto complete if only one match
+        if (num_hint >= 1) {
+          longest_fit();
+          auto_complete(buffer);
+        }
+        if (num_hint > 1) print_hint();
       }
-      if (num_hint > 1) print_hint();
       continue;
     }
     // up and down key
@@ -401,18 +403,8 @@ void find_match_history(char buffer[BUFFER_SIZE]) {
 // input: fit[], puzzle[]
 // update: buffer[], len, pos
 void auto_complete(char buffer[BUFFER_SIZE]) {
-  if (strlen(fit)) {
-    size_t offset = len - pos;
-    size_t len_puzzle = strlen(puzzle);
-    size_t len_add = strlen(fit) - len_puzzle;
-    len += len_add;
-    for (size_t i = len - 1; i >= pos + len_add; i--)
-      buffer[i] = buffer[i - len_add];
-    for (size_t i = 0; i < len_add; i++) buffer[pos + i] = fit[len_puzzle + i];
-    for (size_t i = pos; i < len; i++) putchar(buffer[i]);
-    pos += len_add;
-    if (offset > 0) cursor_backward(offset);
-  }
+  size_t len_fit = strlen(fit);
+  for (size_t i = strlen(puzzle); i < len_fit; i++) write_char(fit[i], buffer);
 }
 
 // print matched filenames
