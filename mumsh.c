@@ -1,6 +1,6 @@
 #include "mumsh.h"
 
-// variables for handling ctrl-c interruption
+// for CTRL-C interruption
 sigjmp_buf env;
 volatile sig_atomic_t jump_active;
 
@@ -32,7 +32,7 @@ int main() {
       free_cmds();
       continue;
     }
-    // safe lock in case ctrl-c come before jump point is set
+    // safe lock in case CTRL-C come before jump point is set
     jump_active = 1;
     // prompt and read input
     mumsh_read_cmds();
@@ -40,7 +40,6 @@ int main() {
     reap_background_jobs();
     // parse input command
     if (mumsh_parser() != NORMAL) {
-      // free allocated memory
       free_cmds();
       continue;
     }
@@ -60,7 +59,6 @@ int main() {
     }
     // execute cmds which run in child process
     mumsh_exec_cmds();
-    // free allocated memory
     free_cmds();
   }
   free_jobs();

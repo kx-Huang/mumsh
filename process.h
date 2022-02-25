@@ -25,6 +25,7 @@ typedef struct job {
   char** cmd_table;
 } job_t;
 
+// for CTRL-C interruption
 extern sigjmp_buf env;
 extern volatile sig_atomic_t jump_active;
 
@@ -46,7 +47,7 @@ void mumsh_cmd_jobs(token_t* token);
 void input_redirect();
 void output_redirect();
 
-// error handling
+// exit process
 void exit_process(int exit_code, char* content);
 
 // for debug
