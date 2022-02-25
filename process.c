@@ -1,10 +1,5 @@
 #include "process.h"
 
-job_t job;                     // store background jobs for cmd "jobs"
-pid_t pgid;                    // store child process group pid for grouping
-char OLDPWD[BUFFER_SIZE];      // store last working directory for cmd "cd -"
-int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
-
 // ctrl-c interruption handler
 void sigint_handler() {
   if (jump_active == 0) return;

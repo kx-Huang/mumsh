@@ -16,6 +16,11 @@
 #define WRITE 1
 #define JOBS_CAPACITY 1024
 
+// for CTRL-C interruption
+extern sigjmp_buf env;
+extern volatile sig_atomic_t jump_active;
+
+// for background jobs
 typedef struct job {
   size_t bg_cnt;
   size_t job_cnt;
@@ -24,10 +29,11 @@ typedef struct job {
   pid_t** pid_table;
   char** cmd_table;
 } job_t;
+job_t job;
 
-// for CTRL-C interruption
-extern sigjmp_buf env;
-extern volatile sig_atomic_t jump_active;
+pid_t pgid;                    // store child process group pid for grouping
+char OLDPWD[BUFFER_SIZE];      // store last working directory for cmd "cd -"
+int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
 
 // called in mumsh.c
 void sigint_handler();

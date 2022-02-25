@@ -6,15 +6,11 @@
 #define COMMAND_SIZE 512
 #define PROCESS_SIZE 512
 
-#define NO_HINT 0
-#define FULL_HINT 1
-#define MATCHED_HINT 2
-
 #include <stdbool.h>
 #include <stdio.h>
 
 // error handle
-enum error_type {
+typedef enum error_type {
   NORMAL = 0,
   NON_EXISTING_PROGRAM = 1,
   NON_EXISTING_FILE = 2,
@@ -25,7 +21,7 @@ enum error_type {
   MISS_PROGRAM = 7,
   NON_EXISTING_DIR = 8,
   UNEXPECTED_ERROR = 9
-};
+} error_t;
 
 // for parse and process
 typedef struct token {

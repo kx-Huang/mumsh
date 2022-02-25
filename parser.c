@@ -179,7 +179,7 @@ void free_cmds() {
 }
 
 // terminate parsing function due to syntax error
-int syntax_error(int error_type, char* content) {
+int syntax_error(error_t error_type, char* content) {
   switch (error_type) {
     case DUP_INPUT_REDIRECTION:
       fputs("error: duplicated input redirection\n", stderr);

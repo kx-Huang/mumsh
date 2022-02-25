@@ -25,25 +25,44 @@
 #define KEY_RIGHT 0x0107
 #define KEY_LEFT 0x0108
 
-size_t len;
-size_t pos;
-size_t num_hint;
-size_t num_history_all;
-size_t num_history_match;
-size_t width_clean;
-size_t offset_prefix;
-size_t index_history_all;
-size_t index_history_match;
-bool iterate_mode;
-bool match_mode;
-bool from_home;
-char token[BUFFER_SIZE];
-char puzzle[TOKEN_SIZE];
-char path[TOKEN_SIZE];
-char fit[BUFFER_SIZE];
-char hint[BUFFER_SIZE][TOKEN_SIZE];
-char history_all[BUFFER_SIZE][BUFFER_SIZE];
-char history_match[BUFFER_SIZE][BUFFER_SIZE];
+typedef enum hint_type {
+  NO_HINT = 0,
+  FULL_HINT = 1,
+  MATCHED_HINT = 2
+} hint_t;
+
+size_t len;                 // length of input
+size_t pos;                 // position of cursor
+size_t num_hint;            // number of matched filenames
+size_t num_history_all;     // number of all command history
+size_t num_history_hint;    // number of matched command history
+size_t width_clean;         // maximum width of hinted filenames
+size_t offset_prefix;       // number of mumsh prefix character
+size_t index_history_all;   // index of all command history
+size_t index_history_hint;  // index of matched command history
+bool mode_iterate;          // show all command history
+bool mode_hint;             // show matched command history
+bool from_home;             // path from home directory
+
+char token[BUFFER_SIZE];             // path or word separate by space
+char puzzle[TOKEN_SIZE];             // letters to be completed
+char path[TOKEN_SIZE];               // path part of token
+char fit[BUFFER_SIZE];               // longest string for auto-complete
+char hint[BUFFER_SIZE][TOKEN_SIZE];  // all matched filenames in path of token
+char history_all[BUFFER_SIZE][BUFFER_SIZE];    // all command history
+char history_match[BUFFER_SIZE][BUFFER_SIZE];  // matched command history
+
+// sample command: ls ~/Github/mum| > out (here '|' stands for cursor)
+// token:   ~/Github/mum
+// path:    ~/Github/
+// puzzle:  mum
+// fit:     mumsh
+// hint:    mumsh
+// len:     21
+// pos:     15
+// num_hint:    1
+// width_clean: 0
+// from_home:   true
 
 // capture key-board input
 struct termios term, oterm;
@@ -58,10 +77,10 @@ void clean_hint();
 
 // called in hinter.c
 void clean_buffer(char buffer[BUFFER_SIZE]);
-int hint_type(char buffer[BUFFER_SIZE]);
+hint_t hint_type(char buffer[BUFFER_SIZE]);
 void find_token(char buffer[BUFFER_SIZE], char delimiter[8]);
 void create_puzzle();
-void find_match_filename(int type);
+void find_match_filename(hint_t type);
 void find_match_history(char buffer[BUFFER_SIZE]);
 void longest_fit();
 void auto_complete(char buffer[BUFFER_SIZE]);

@@ -12,7 +12,7 @@ int mumsh_parser();
 void free_cmds();
 
 // called in parser.c
-int syntax_error(int error_type, char* content);
+int syntax_error(error_t error_type, char* content);
 
 // for debugging
 void debug_parser();
