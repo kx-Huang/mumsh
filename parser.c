@@ -20,10 +20,10 @@ void debug_parser() {
 // clear cmd struct for coming loop
 void reset_cmd() {
   cmd.cnt = 0;
-  cmd.background = 0;
-  cmd.read_file = 0;
-  cmd.write_file = 0;
-  cmd.append_file = 0;
+  cmd.background = false;
+  cmd.read_file = false;
+  cmd.write_file = false;
+  cmd.append_file = false;
   memset(cmd.src, 0, BUFFER_SIZE);
   memset(cmd.dest, 0, BUFFER_SIZE);
   memset(cmd.cmds, 0, COMMAND_SIZE);
@@ -32,7 +32,7 @@ void reset_cmd() {
 // parse command line input into executable cmd token
 int mumsh_parser() {
   // initialize data structure
-  parser_t parser = {0, 0, 0, 0, 0, 0, {0}};
+  parser_t parser = {0, false, false, false, false, false, {0}};
   token_t token = {0, {NULL}};
   // finite state machine
   for (size_t i = 0; i < BUFFER_SIZE; i++) {
@@ -59,13 +59,13 @@ int mumsh_parser() {
           // save buffer as redirect source
           if (parser.is_src) {
             strcpy(cmd.src, parser.buffer);
-            parser.is_src = 0;
-            cmd.read_file = 1;
+            parser.is_src = false;
+            cmd.read_file = true;
             // save buffer as redirect destination
           } else if (parser.is_dest) {
             strcpy(cmd.dest, parser.buffer);
-            parser.is_dest = 0;
-            cmd.write_file = 1;
+            parser.is_dest = false;
+            cmd.write_file = true;
             // save buffer as argument
           } else {
             token.argv[token.argc] = malloc(parser.buffer_len + 1);
@@ -86,8 +86,8 @@ int mumsh_parser() {
               cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
             return syntax_error(DUP_INPUT_REDIRECTION, "");
           }
-          parser.is_dest = 0;
-          parser.is_src = 1;
+          parser.is_dest = false;
+          parser.is_src = true;
         } else if (cmd_buffer[i] == '>') {
           // error 5: Duplicated output redirection
           if (cmd.write_file) {
@@ -95,8 +95,8 @@ int mumsh_parser() {
               cmd.cmds[cmd.cnt++] = token;  // to free allocated memory
             return syntax_error(DUP_OUTPUT_REDIRECTION, "");
           }
-          parser.is_src = 0;
-          parser.is_dest = 1;
+          parser.is_src = false;
+          parser.is_dest = true;
           if (cmd_buffer[i + 1] == '>') {  // >>
             cmd.append_file = 1;
             i++;  // skip the second > for >> as a hole
@@ -157,11 +157,11 @@ int mumsh_parser() {
         continue;
         // single quotation ends
       } else if (parser.in_single_quote && cmd_buffer[i] == '\'') {
-        parser.in_single_quote = 0;
+        parser.in_single_quote = false;
         continue;
         // double quotation ends
       } else if (parser.in_double_quote && cmd_buffer[i] == '\"') {
-        parser.in_double_quote = 0;
+        parser.in_double_quote = false;
         continue;
       }
       // ordinary character, push into buffer

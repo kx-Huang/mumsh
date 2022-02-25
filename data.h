@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+// error handle
 enum error_type {
   NORMAL = 0,
   NON_EXISTING_PROGRAM = 1,
@@ -26,6 +27,7 @@ enum error_type {
   UNEXPECTED_ERROR = 9
 };
 
+// for parse and process
 typedef struct token {
   size_t argc;
   char *argv[TOKEN_SIZE];
@@ -33,10 +35,10 @@ typedef struct token {
 
 typedef struct cmd {
   size_t cnt;
-  int background;
-  int read_file;
-  int write_file;
-  int append_file;
+  bool background;
+  bool read_file;
+  bool write_file;
+  bool append_file;
   char src[BUFFER_SIZE];
   char dest[BUFFER_SIZE];
   token_t cmds[COMMAND_SIZE];
@@ -44,36 +46,14 @@ typedef struct cmd {
 
 typedef struct parser {
   size_t buffer_len;
-  int is_src;
-  int is_dest;
-  int is_pipe;
-  int in_single_quote;
-  int in_double_quote;
+  bool is_src;
+  bool is_dest;
+  bool is_pipe;
+  bool in_single_quote;
+  bool in_double_quote;
   char buffer[BUFFER_SIZE];
 } parser_t;
 
-// for hinter
-extern size_t len;
-extern size_t pos;
-extern size_t num_hint;
-extern size_t num_history_all;
-extern size_t num_history_match;
-extern size_t width_clean;
-extern size_t offset_prefix;
-extern size_t index_history_all;
-extern size_t index_history_match;
-extern bool iterate_mode;
-extern bool match_mode;
-extern bool from_home;
-extern char token[BUFFER_SIZE];
-extern char puzzle[TOKEN_SIZE];
-extern char path[TOKEN_SIZE];
-extern char fit[BUFFER_SIZE];
-extern char hint[BUFFER_SIZE][TOKEN_SIZE];
-extern char history_all[BUFFER_SIZE][BUFFER_SIZE];
-extern char history_match[BUFFER_SIZE][BUFFER_SIZE];
-
-// for parser
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
 

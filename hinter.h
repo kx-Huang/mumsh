@@ -25,6 +25,26 @@
 #define KEY_RIGHT 0x0107
 #define KEY_LEFT 0x0108
 
+size_t len;
+size_t pos;
+size_t num_hint;
+size_t num_history_all;
+size_t num_history_match;
+size_t width_clean;
+size_t offset_prefix;
+size_t index_history_all;
+size_t index_history_match;
+bool iterate_mode;
+bool match_mode;
+bool from_home;
+char token[BUFFER_SIZE];
+char puzzle[TOKEN_SIZE];
+char path[TOKEN_SIZE];
+char fit[BUFFER_SIZE];
+char hint[BUFFER_SIZE][TOKEN_SIZE];
+char history_all[BUFFER_SIZE][BUFFER_SIZE];
+char history_match[BUFFER_SIZE][BUFFER_SIZE];
+
 // capture key-board input
 struct termios term, oterm;
 int keyboard_get(void);
