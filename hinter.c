@@ -10,6 +10,7 @@ void mumsh_hinter(char *buffer) {
     // enter key
     if (c == KEY_ENTER) {
       clean_hint();
+      clean_history_hint();
       save_history(buffer);
       buffer[len] = '\n';
       printf("\n");
@@ -19,8 +20,7 @@ void mumsh_hinter(char *buffer) {
     if (c == KEY_ESCAPE) continue;
     // tab key
     if (c == KEY_TAB) {
-      mode_hint = false;
-      mode_iterate = false;
+      clean_history_hint();
       clean_hint();
       hint_t type = hint_type(buffer);
       // cursor after space or none: full hint
@@ -89,20 +89,20 @@ void mumsh_hinter(char *buffer) {
         if (num_history_hint <= 1) continue;
         index_history_hint = num_history_hint - 2;
       }
-      // write history into buffer
+      // write history into buffer and display
       clean_buffer(buffer);
       strcpy(puzzle, "");
-      if (mode_iterate)
+      if (mode_iterate && num_history_all)
         strcpy(fit, history_all[index_history_all]);
-      else if (mode_hint)
-        strcpy(fit, history_match[index_history_hint]);
+      else if (mode_hint && num_history_hint)
+        strcpy(fit, history_hint[index_history_hint]);
       auto_complete(buffer);
       continue;
     }
     // left arrow key
     if (c == KEY_LEFT) {
-      mode_hint = false;
-      mode_iterate = false;
+      clean_history_hint();
+      index_history_hint = 0;
       if (pos > 0) {
         cursor_backward((size_t)1);
         pos--;
@@ -111,8 +111,7 @@ void mumsh_hinter(char *buffer) {
     }
     // right arrow key
     if (c == KEY_RIGHT) {
-      mode_hint = false;
-      mode_iterate = false;
+      clean_history_hint();
       if (pos < len) {
         cursor_forward((size_t)1);
         pos++;
@@ -121,8 +120,7 @@ void mumsh_hinter(char *buffer) {
     }
     // delete key
     if (c == KEY_DELETE) {
-      mode_hint = false;
-      mode_iterate = false;
+      clean_history_hint();
       delete_char(buffer);
       continue;
     }
@@ -360,21 +358,25 @@ void longest_fit() {
 
 // find the matched command history except itself
 // input: history[][], buffer[]
-// update: history_match[], num_history_hint
+// update: history_hint[], num_history_hint
 // feature: num_history_hint >= 1
 void find_match_history(char buffer[BUFFER_SIZE]) {
   num_history_hint = 0;
   char last_match[BUFFER_SIZE] = {0};
-  memset(history_match, 0, BUFFER_SIZE);
   for (size_t i = 0; i < num_history_all; i++) {
     if (strlen(history_all[i]) > strlen(buffer) &&
         strcmp(last_match, history_all[i]) &&
         strncmp(history_all[i], buffer, strlen(buffer)) == 0) {
       strcpy(last_match, history_all[i]);
-      strcpy(history_match[num_history_hint++], history_all[i]);
+      history_hint = _alloc_2D_array(history_hint, &num_history_hint);
+      history_hint[num_history_hint - 1] = malloc(BUFFER_SIZE);
+      strcpy(history_hint[num_history_hint - 1], history_all[i]);
     }
   }
-  strcpy(history_match[num_history_hint++], buffer);
+  // save current token into history
+  history_hint = _alloc_2D_array(history_hint, &num_history_hint);
+  history_hint[num_history_hint - 1] = malloc(BUFFER_SIZE);
+  strcpy(history_hint[num_history_hint - 1], buffer);
 }
 
 // auto complete the longest fit of match
@@ -419,6 +421,7 @@ void delete_char(char buffer[BUFFER_SIZE]) {
 
 // save command into history (except for all spaces)
 void save_history(char buffer[BUFFER_SIZE]) {
+  // if all space, do nothing
   int all_space = 1;
   size_t len = strlen(buffer);
   for (size_t i = 0; i < len; i++) {
@@ -427,11 +430,14 @@ void save_history(char buffer[BUFFER_SIZE]) {
       break;
     }
   }
-  if (!all_space) {
-    if (num_history_all == 0 ||
-        strcmp(buffer, history_all[num_history_all - 1]))
-      strcpy(history_all[num_history_all++], buffer);
-  }
+  if (all_space) return;
+  // if command is same as last one, do nothing
+  if (num_history_all && !strcmp(buffer, history_all[num_history_all - 1]))
+    return;
+  // save command to history
+  history_all = _alloc_2D_array(history_all, &num_history_all);
+  history_all[num_history_all - 1] = malloc(BUFFER_SIZE);
+  strcpy(history_all[num_history_all - 1], buffer);
 }
 
 // move cursor to user input
@@ -441,6 +447,26 @@ void _calibrate_cursor(size_t pos_now) {
     cursor_forward(pos + offset_prefix - pos_now);
   else if (pos_now > pos + offset_prefix)
     cursor_backward(pos_now - pos - offset_prefix);
+}
+
+// allocate memory for pointer
+char **_alloc_2D_array(char **ptr, size_t *len) {
+  (*len)++;
+  if (*len == 1)
+    return malloc(sizeof(char *));
+  else
+    return realloc(ptr, *len * sizeof(char *));
+}
+
+// clear history indicator
+void clean_history_hint() {
+  mode_hint = false;
+  mode_iterate = false;
+  index_history_all = 0;
+  index_history_hint = 0;
+  for (size_t i = 0; i < num_history_hint; i++) free(history_hint[i]);
+  if (num_history_hint) free(history_hint);
+  num_history_hint = 0;
 }
 
 // debug hinter
@@ -460,6 +486,6 @@ void debug_hinter(char *buffer) {
     printf("[%zu]: %s\n", i, history_all[i]);
   printf("-- Matched History --\n");
   for (size_t i = 0; i < num_history_hint; i++)
-    printf("[%zu]: %s\n", i, history_match[i]);
+    printf("[%zu]: %s\n", i, history_hint[i]);
   printf("------ Output -------\n");
 }

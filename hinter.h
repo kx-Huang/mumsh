@@ -25,11 +25,7 @@
 #define KEY_RIGHT 0x0107
 #define KEY_LEFT 0x0108
 
-typedef enum hint_type {
-  NO_HINT = 0,
-  FULL_HINT = 1,
-  MATCHED_HINT = 2
-} hint_t;
+typedef enum hint_type { NO_HINT = 0, FULL_HINT = 1, MATCHED_HINT = 2 } hint_t;
 
 size_t len;                 // length of input
 size_t pos;                 // position of cursor
@@ -49,8 +45,9 @@ char puzzle[TOKEN_SIZE];             // letters to be completed
 char path[TOKEN_SIZE];               // path part of token
 char fit[BUFFER_SIZE];               // longest string for auto-complete
 char hint[BUFFER_SIZE][TOKEN_SIZE];  // all matched filenames in path of token
-char history_all[BUFFER_SIZE][BUFFER_SIZE];    // all command history
-char history_match[BUFFER_SIZE][BUFFER_SIZE];  // matched command history
+
+char **history_all;   // all command history
+char **history_hint;  // matched command history
 
 // sample command: ls ~/Github/mum| > out (here '|' stands for cursor)
 // token:   ~/Github/mum
@@ -76,6 +73,7 @@ void mumsh_hinter(char *buffer);
 void clean_hint();
 
 // called in hinter.c
+void clean_history_hint();
 void clean_buffer(char buffer[BUFFER_SIZE]);
 hint_t hint_type(char buffer[BUFFER_SIZE]);
 void find_token(char buffer[BUFFER_SIZE], char delimiter[8]);
@@ -89,6 +87,7 @@ void write_char(int c, char buffer[BUFFER_SIZE]);
 void delete_char(char buffer[BUFFER_SIZE]);
 void save_history(char buffer[BUFFER_SIZE]);
 void _calibrate_cursor(size_t pos_now);
+char **_alloc_2D_array(char **ptr, size_t *len);
 
 // for debug
 void debug_hinter(char *buffer);
