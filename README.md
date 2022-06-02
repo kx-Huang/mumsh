@@ -23,7 +23,7 @@ This project is originated from a course project in `VE482 Operating System` [@U
   3) Show `Git` status in prefix
   4) Auto translate `~` to home path in parser
 
-- For VE482 course project version, see [Releases: VE482 Project 1](https://github.com/kx-Huang/mumsh/releases/tag/v1.0.0) or [Branches: VE482](https://github.com/kx-Huang/mumsh/tree/VE482).
+For VE482 course project version, see [Releases: VE482 Project 1](https://github.com/kx-Huang/mumsh/releases/tag/v1.0.0) or [Branches: VE482](https://github.com/kx-Huang/mumsh/tree/VE482).
 
 ## Functionalities
 
