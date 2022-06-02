@@ -1,7 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1025
 #define TOKEN_SIZE 512
 #define COMMAND_SIZE 512
 #define PROCESS_SIZE 512
@@ -52,8 +52,4 @@ typedef struct parser {
 
 extern char cmd_buffer[BUFFER_SIZE];
 extern cmd_t cmd;
-
-// for debug
-void debug_path(int from_home, size_t depth, char *token[TOKEN_SIZE]);
-
 #endif  // DATA_H
