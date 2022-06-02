@@ -10,17 +10,20 @@
 
 This project is originated from a course project in `VE482 Operating System` [@UM-SJTU Joint Institute](https://www.ji.sjtu.edu.cn/). In general, a mini shell called `mumsh` is implemented with `programming language C` for Unix-like machine.
 
-## Change Log
+## Change Log [![wakatime](https://wakatime.com/badge/user/7d2c2fc8-bd1d-4e1e-bb2b-b49c6120ed53/project/e2a5aabc-1191-4a22-9719-3809e915d8a9.svg)](https://wakatime.com/badge/user/7d2c2fc8-bd1d-4e1e-bb2b-b49c6120ed53/project/e2a5aabc-1191-4a22-9719-3809e915d8a9)
 
-- [2022/2/12] Add feature: Dynamic current path prompt in prefix
-- [2022/2/13] Add feature: Left & right cursor switch and dynamic insert & delete
-- [2022/2/15] Add feature: Tab-triggered hint and auto-completion
 - [2022/2/19] Add feature: Command history auto-completion with smart search
+- [2022/2/15] Add feature: Tab-triggered hint and auto-completion
+- [2022/2/13] Add feature: Left & right cursor switch and dynamic insert & delete
+- [2022/2/12] Add feature: Dynamic current path prompt in prefix
+
 - Future upgrade list:
   1) Handle print overflow regarding terminal size
   2) `CTRL-D` keyboard capture and interruption
   3) Show `Git` status in prefix
   4) Auto translate `~` to home path in parser
+
+## Functionalities
 
 `mumsh` supports some basic shell functionalities including:
 
@@ -28,9 +31,9 @@ This project is originated from a course project in `VE482 Operating System` [@U
 - Command history auto-completion with smart search
 - Incomplete input waiting
 - Syntax error handling
-- Quotes parsing
+- Quotation mark parsing
 - Internal commands `exit`/`pwd`/`cd`/`jobs`
-- I/O redirection under bash style syntax
+- I/O redirection under `bash` style syntax
 - Arbitrarily-deep pipes running in parallel
 - `CTRL-C` interruption
 - Background jobs
@@ -62,7 +65,7 @@ We have 4 kinds of files in this project:
   - `process.h`: store global variables regarding process
   - `data.h`: store extern global variables regarding read/parse/execute loop
 - makefile
-  - used for quick build and clean of executable file
+  - used for quick build and clean of executable files
 
 ## 1. Build and Run `mumsh`
 
