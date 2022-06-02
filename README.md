@@ -1,6 +1,6 @@
 # `mumsh`: VE482 Project 1 Version
 
-This release of `mumsh` meets VE482 Project 1 100% basic requirements, along with 100% bonus.
+This release version of `mumsh` meets 100% VE482 Project 1 requirements, including basic and bonus.
 
 ## Features
 
