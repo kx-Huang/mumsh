@@ -22,7 +22,7 @@ check: $(MUMSH) $(MUMSHMC) $(MUMSH_H)
 $(MUMSH): $(MUMSH_SRC) $(MUMSH_H)
 	$(CC) $(CFLAGS) -o $(MUMSH) $(MUMSH_SRC)
 
-$(MUMSHMC) : $(MUMSH_SRC) $(MUMSH_H)
+$(MUMSHMC): $(MUMSH_SRC) $(MUMSH_H)
 	$(CC) $(CFLAGS) $(MUMSHMC_FLAGS) -o $(MUMSHMC) $(MUMSH_SRC)
 
 .c.o:
