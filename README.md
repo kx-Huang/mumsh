@@ -1,6 +1,6 @@
 # `mumsh`: VE482 Course Project Version
 
-This release version of `mumsh` meets 100% VE482 Course Project requirements, including basic and bonus.
+This release version of `mumsh` meets 100% VE482 course project requirements, including basic and bonus.
 
 ## Features
 
