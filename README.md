@@ -1059,7 +1059,7 @@ The rest of the coding is really simple:
   Below is the sketch and code for better understanding.
 
   ```log
-  process i-1 -> write end <- pipe i-1 -> read end <- process i -> write end <- pipe i -> read end <- process i+1 -> ...
+  [process i-1] -> {write end <- pipe i-1 -> read end} <- [process i] -> {write end <- pipe i -> read end} <- [process i+1] -> ...
   ```
 
   ```c
