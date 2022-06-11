@@ -948,4 +948,129 @@ With this `job table` data structure, we can easily handle the background jobs.
 
 ### 3.7 Redirection and Pipe: `dup2()` and `pipe()` System Call
 
-To be written...
+In this section, we are going to build the `redirection` and `pipe` using `dup2()` and `pipe()` system call.
+
+The nature of redirection and pipe is actually the same: the direction of input and output stream are changed:
+
+1. With a redirection, the `stdin` or `stdout` changes to a file
+2. With a pipe, the `stdout` of the former command becomes the `stdin` of the latter command.
+
+To do this, we should first get familiar with `file desciptor`.
+
+---
+
+#### 3.7.1 File Desciptor
+
+According to [`Wikipedia`](https://en.wikipedia.org/wiki/File_descriptor),
+
+> A file descriptor (FD) is a unique identifier (handle) for a file or other input/output resource.
+> File descriptors typically have non-negative integer values, with negative values being reserved to indicate "no value" or error conditions.
+
+For each process, 3 standard file descriptors are given, corresponding to the 3 standard streams:
+
+  | Integer value |        Name        | `<unistd.h>` symbolic constant | `<stdio.h>` file stream |
+  | :-----------: | :----------------: | :----------------------------: | :---------------------: |
+  |       0       |   Standard input   |         `STDIN_FILENO`         |         `stdin`         |
+  |       1       |   Standard output  |         `STDOUT_FILENO`        |         `stdout`        |
+  |       2       |   Standard error   |         `STDERR_FILENO`        |         `stderr`        |
+
+---
+
+#### 3.7.2 Redirection using `dup2()` System Call
+
+With the knowledge of `file desciptor`, what if we adjust the original file desciptor so that it now refers to a new open file?
+
+For example, if we change `stdout` file desciptor to let it represent a specified file, the output stream will be redirected to this specified file instead of `stdout`, and that's how `dup2()` system call works.
+
+
+> [`dup2()`](https://man7.org/linux/man-pages/man2/dup.2.html) - duplicate a file descriptor
+>
+> **Description**
+>
+> - The `dup2()` system call allocates a new file descriptor `newfd` that refers to the same open file description as the descriptor `oldfd`
+>
+> ```c
+>   #include <unistd.h>
+>   int dup2(int oldfd, int newfd);
+> ```
+>
+> **Arguments**
+>
+> - `newfd`: new file descriptor to be allocated
+> - `oldfd`: old file descriptor to be referred
+>
+> **Return value**
+>
+> - On success: return the new file descriptor
+> - On failure
+>   - `-1` is returned
+>   - `errno` is set to indicate the error
+
+---
+
+#### 3.7.3 Create a pipe using `pipe()` System Call
+
+For the pipe, the case is a little bit more complicated. We can't just `dup2(STDIN_FILENO, STDOUT_FILENO)`, because it works only for one process, and it makes no sense making my output to my input.
+
+As a result, we need something serving as an "intermediate" between two processes for data transfer. Here comes the `pipe` and `pipe()` system call.
+
+> [`pipe()`](https://man7.org/linux/man-pages/man2/pipe.2.html) - create pipe
+>
+> **Description**
+>
+> - `pipe()` creates a pipe, a unidirectional data channel that can be used for interprocess communication
+> - Data written to the write end of the pipe is buffered by the kernel until it is read from the read end of the pipe.
+>
+> ```c
+>   #include <unistd.h>
+>   int pipe(int pipefd[2]);
+> ```
+>
+> **Arguments**
+>
+> - The array `pipefd` is used to return two file descriptors referring to the ends of the pipe:
+>   - pipefd[0] refers to the read end of the pipe
+>   - pipefd[1] refers to the write end of the pipe
+>
+> **Return value**
+>
+> - On success: zero is returned
+> - On failure
+>   - `-1` is returned
+>   - `errno` is set to indicate the error
+>   - `pipefd` is left unchanged
+
+The rest of the coding is really simple:
+
+1. First, we create an array storing file descriptor for each process
+
+    ```c
+    int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
+    ```
+
+2. Second, connect processes with pipe:
+  - For the left pipe `i-1`:
+    - Close the wirte end
+    - adjust `stdin` to the read end
+  - For the right pipe `i`
+    - close the read end
+    - adjust `stdout` to the write end.
+
+  Below is the sketch and code for better understanding.
+
+  ```log
+  process i-1 -> write end <- pipe i-1 -> read end <- process i -> write end <- pipe i -> read end <- process i+1 -> ...
+  ```
+
+  ```c
+  #define READ_END 0
+  #define WRITE_END 1
+
+  // pipe at the left of the current command
+  close(pipe_fd[i - 1][READ_END]);
+  dup2(pipe_fd[i - 1][READ_END], STDIN_FILENO);
+
+  // pipe at the right of the current command
+  close(pipe_fd[i][READ_END]);
+  dup2(pipe_fd[i][READ_END], STDOUT_FILENO);
+  ```
