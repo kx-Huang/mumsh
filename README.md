@@ -946,7 +946,7 @@ With this `job table` data structure, we can easily handle the background jobs.
 
 ---
 
-### 3.7 Redirection and Pipe: `dup2()` and `pipe()` System Call
+### 3.7 Redirection and Pipe
 
 In this section, we are going to build the `redirection` and `pipe` using `dup2()` and `pipe()` system call.
 
