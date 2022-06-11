@@ -1048,7 +1048,7 @@ The rest of the coding is really simple:
     int pipe_fd[PROCESS_SIZE][2];  // store pipe file descriptor for piping
     ```
 
-2. Second, connect processes with pipe:
+2. Second, for each process, connect the previous and next with pipe:
   - For the left pipe `i-1`:
     - Close the wirte end
     - adjust `stdin` to the read end
