@@ -12,6 +12,8 @@ This project is originated from a course project in `VE482 Operating System` [@U
 
 ## Change Log [![wakatime](https://wakatime.com/badge/user/7d2c2fc8-bd1d-4e1e-bb2b-b49c6120ed53/project/e2a5aabc-1191-4a22-9719-3809e915d8a9.svg)](https://wakatime.com/badge/user/7d2c2fc8-bd1d-4e1e-bb2b-b49c6120ed53/project/e2a5aabc-1191-4a22-9719-3809e915d8a9)
 
+For VE482 course project version, see [Releases: VE482 Project 1](https://github.com/kx-Huang/mumsh/releases/tag/v1.0.0) or [Branches: VE482](https://github.com/kx-Huang/mumsh/tree/VE482).
+
 - [2022/2/19] Add feature: Command history auto-completion with smart search
 - [2022/2/15] Add feature: Tab-triggered hint and auto-completion
 - [2022/2/13] Add feature: Left & right cursor switch and dynamic insert & delete
@@ -22,8 +24,6 @@ This project is originated from a course project in `VE482 Operating System` [@U
   2) `CTRL-D` keyboard capture and interruption
   3) Show `Git` status in prefix
   4) Auto translate `~` to home path in parser
-
-For VE482 course project version, see [Releases: VE482 Project 1](https://github.com/kx-Huang/mumsh/releases/tag/v1.0.0) or [Branches: VE482](https://github.com/kx-Huang/mumsh/tree/VE482).
 
 ## Functionalities
 
