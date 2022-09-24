@@ -796,7 +796,7 @@ Actually, the answer to the questions are all hiden in FSM. For FSM, we have dif
 
 For reference, the following FSM defines states and state transitions of a simple strong parser.
 
-![An FSM Parser](https://z3.ax1x.com/2021/10/01/47n26g.png)
+![An FSM Parser](img/FSM_parser.png)
 
 You may notice that the pipe mark `|` and background jobs indicator `&` are absent in the above FSM. But once we figure this methodology out, it's nothing big deal but adding a few state transitions.
 
